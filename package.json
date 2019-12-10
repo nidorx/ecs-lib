@@ -1,11 +1,11 @@
 {
     "name": "ecs-lib",
-    "version": "0.1.0-pre.0",
+    "version": "0.1.0-pre.4",
     "description": "Entity Component System",
-    "main": "dist/index.js",
+    "main": "index.js",
     "scripts": {
-        "build": "npm run-script build-js && npm run-script build-ts",
-        "build-js": "browserify src/index.ts -p [ tsify --emitDeclarationOnly=false ] > dist/index.js",
+        "build": "npm run-script build-ts && npm run-script build-js",
+        "build-js": "browserify src/index.ts -p [ tsify --emitDeclarationOnly=false ] -s ecs-lib > index.js",
         "build-ts": "tsc -p tsconfig.json",
         "publish-lib": "node v-release.js && node publish.js",
         "publish-lib-snapshot": "node v-snapshot.js &&  node publish.js"
@@ -28,7 +28,8 @@
         "typescript": "3.7.3"
     },
     "files": [
-        "dist",
+        "index.js",
+        "index.d.ts",
         "LICENSE",
         "README.md"
     ],

@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "baseUrl": "./web-ts",
+    "outDir": "./dist/assets/js",
+    "noImplicitAny": true,
+    "sourceMap": true,
+    "module": "es6",
+    "target": "es5",
+    "jsx": "react",
+    "allowJs": true,
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "node",
+    "lib": [
+      "dom",
+      "es2015"
+    ],
+    "types": [
+      "three"
+    ]
+  },
+  "exclude": [
+    "node_modules"
+  ]
+}

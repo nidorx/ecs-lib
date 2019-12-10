@@ -1,9 +1,6 @@
 # IDE
 .idea
 
-index.js
-index.d.ts
-
 # Logs
 logs
 *.log

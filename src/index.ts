@@ -114,9 +114,9 @@ export type ComponentClassType<P> = (new (data: P) => Component<P>) & {
 
     type: number;
 
-    allFrom(entity: Entity): ComponentClassType<P>[];
+    allFrom(entity: Entity): Component<P>[];
 
-    oneFrom(entity: Entity): ComponentClassType<P>;
+    oneFrom(entity: Entity): Component<P>;
 }
 
 /**
@@ -187,12 +187,12 @@ export class Component<T> {
 /**
  * Representação de um sistema no ECS
  */
-export class System {
+export abstract class System {
 
     /**
      * Implementação deve informar quais tipo de componentes esse sistema opera sobre
      */
-    public components: number[] = [];
+    private components: number[] = [];
 
     /**
      * Invocado durante atualização
@@ -218,6 +218,19 @@ export class System {
      * @param components
      */
     public exit?(entity: Entity): void;
+
+    /**
+     * Necessário informar os componentes
+     *
+     * @param components
+     */
+    constructor(components: number[]) {
+        this.components = components;
+    }
+
+    public getComponents(): number[] {
+        return this.components.slice();
+    }
 }
 
 /**
@@ -433,14 +446,6 @@ export default class ECS {
             }
 
             systems.forEach(system => {
-                const components: {
-                    [key: number]: Component<any>[]
-                } = {};
-
-                system.components.forEach(typeId => {
-                    components[typeId] = entity.components[typeId];
-                });
-
                 if (system.update) {
                     system.update(now, elapsed, entity);
                 }
@@ -477,7 +482,7 @@ export default class ECS {
             }
 
 
-            let systemComponents = system.components;
+            let systemComponents = system.getComponents();
 
             for (var a = 0, l = systemComponents.length; a < l; a++) {
                 if (entityComponents.indexOf(systemComponents[a]) < 0) {
