@@ -1,0 +1,42 @@
+{
+  "name": "game-ecs",
+  "version": "1.0.0",
+  "description": "Entity Component System",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "npm run-script build-js && npm run-script build-ts",
+    "build-js": "browserify src/index.ts -p [ tsify --emitDeclarationOnly=false ] > dist/index.js",
+    "build-ts": "tsc -p tsconfig.json",
+    "publish-lib": "node v-release.js && node publish.js",
+    "publish-lib-snapshot": "node v-snapshot.js &&  node publish.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nidorx/game-ecs.git"
+  },
+  "author": "Alex Rodin <contato@alexrodin.info>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nidorx/game-ecs/issues"
+  },
+  "homepage": "https://github.com/nidorx/game-ecs#readme",
+  "devDependencies": {
+    "browserify": "16.5.0",
+    "rimraf": "3.0.0",
+    "tsify": "4.0.1",
+    "typescript": "3.7.3"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "keywords": [
+    "ecs",
+    "entity-component-system",
+    "entity",
+    "game-ecs",
+    "gameloop",
+    "threejs"
+  ]
+}
