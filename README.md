@@ -146,7 +146,40 @@ Represents the logic that transforms component data of an entity from its curren
 
 Each system runs continuously (as if each system had its own thread).
 
-
 In ecs-lib, a system has a strong connection with component types. You must define which components this system works on in the System abstract class constructor.
 
-Whenever an entity with the characteristics expected by this system is added or removed, the system is informed via the "enter" and "exit" methods. These same methods are triggered when the system is added or removed from the world and this world has the pattern of components expected by the system.
+```typescript
+import {Entity, System} from "ecs-lib";
+import {BoxGeometry, Mesh, MeshBasicMaterial} from "three";
+import {BoxComponent} from "../component/BoxComponent";
+import {ColorComponent} from "../component/ColorComponent";
+import {Object3DComponent} from "../component/Object3DComponent";
+
+
+export default class CubeFactorySystem extends System {
+
+    constructor() {
+        super([
+            ColorComponent.type,
+            BoxComponent.type
+        ]);
+    }
+    
+    enter(entity: Entity): void {
+        let object = Object3DComponent.oneFrom(entity);
+        if (!object) {
+            const box = BoxComponent.oneFrom(entity).data;
+            const color = ColorComponent.oneFrom(entity).data;
+
+            const geometry = new BoxGeometry(box.width, box.height, box.depth);
+            const material = new MeshBasicMaterial({color: color});
+            const cube = new Mesh(geometry, material);
+
+            // Append new component to entity
+            entity.add(new Object3DComponent(cube));
+        }
+    }
+}
+```
+
+Whenever an entity with the characteristics expected by this system is added or removed, the system is informed via the **enter** and **exit** methods. These same methods are triggered when the system is added or removed from the world and this world has the pattern of components expected by the system.
