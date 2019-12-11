@@ -1,7 +1,7 @@
 {
     "name": "ecs-lib",
     "version": "0.1.0-pre.6",
-    "description": "Entity Component System",
+    "description": "Tiny and easy to use ECS (Entity Component System) library for game programming and much more",
     "main": "index.js",
     "scripts": {
         "build": "npm run-script build-ts && npm run-script build-js",
@@ -12,18 +12,17 @@
     },
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/nidorx/game-ecs.git"
+        "url": "git+https://github.com/nidorx/ecs-lib.git"
     },
     "author": "Alex Rodin <contato@alexrodin.info>",
     "license": "MIT",
     "bugs": {
-        "url": "https://github.com/nidorx/game-ecs/issues"
+        "url": "https://github.com/nidorx/ecs-lib/issues"
     },
-    "homepage": "https://github.com/nidorx/game-ecs#readme",
+    "homepage": "https://github.com/nidorx/ecs-lib#readme",
     "devDependencies": {
-        "@types/node": "^12.12.17",
+        "@types/node": "12.12.17",
         "browserify": "16.5.0",
-        "rimraf": "3.0.0",
         "semver": "6.3.0",
         "tsify": "4.0.1",
         "typescript": "3.7.3"
@@ -36,8 +35,14 @@
     ],
     "keywords": [
         "ecs",
+        "ecs-framework",
+        "entity-component",
         "entity-component-system",
         "entity",
+        "game",
+        "game-engine",
+        "gamedev",
+        "game-development",
         "game-ecs",
         "gameloop",
         "threejs"

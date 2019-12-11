@@ -13,7 +13,6 @@
  */
 
 const fs = require('fs');
-const rimraf = require('rimraf');
 const cpExec = require('child_process').exec;
 
 function exec(command, callback) {
@@ -50,23 +49,21 @@ function exec(command, callback) {
     });
 }
 
+
+fs.unlinkSync('./index.js');
+fs.unlinkSync('./index.d.ts');
+
 var package = JSON.parse(fs.readFileSync(__dirname + '/package.json'));
 
-rimraf('./dist', {}, function (err) {
-    if (err) {
-        throw err;
-    }
-
-    exec('npm run-script build')
-        // publicação
-        .then(exec.bind(undefined, 'npm publish', null))
-        // commit e push
-        .then(exec.bind(undefined, 'git add --all', null))
-        .then(exec.bind(undefined, 'git commit -m "Publicação da versão v' + package.version + '"', null))
-        .then(exec.bind(undefined, 'git push', null))
-        .then(exec.bind(undefined, 'git tag v' + package.version, null))
-        .then(exec.bind(undefined, 'git push --tags', null))
-        .catch(err => {
-            console.error(err);
-        })
-});
+exec('npm run-script build')
+// publicação
+    .then(exec.bind(undefined, 'npm publish', null))
+    // commit e push
+    // .then(exec.bind(undefined, 'git add --all', null))
+    // .then(exec.bind(undefined, 'git commit -m "Publicação da versão v' + package.version + '"', null))
+    // .then(exec.bind(undefined, 'git push', null))
+    // .then(exec.bind(undefined, 'git tag v' + package.version, null))
+    // .then(exec.bind(undefined, 'git push --tags', null))
+    .catch(err => {
+        console.error(err);
+    });
