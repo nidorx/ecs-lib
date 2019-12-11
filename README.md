@@ -192,7 +192,7 @@ Each system runs continuously (as if each system had its own thread).
 
 In **ecs-lib**, a system has a strong connection with component types. You must define which components this system works on in the `System` abstract class constructor.
 
-If the `update` method is implemented, it will be invoked for every update in the world. Whenever an entity with the characteristics expected by this system is added or removed on world, or it components is changed, the system is informed via the `enter` and `exit` methods.
+If the `update` method is implemented, it will be invoked for every update in the world. Whenever an entity with the characteristics expected by this system is added or removed on world, or it components is changed, the system is informed via the `enter`, `change` and `exit` methods.
 
 ```typescript
 import {Entity, System} from "ecs-lib";
@@ -317,6 +317,25 @@ Invoked when:
              // Append new component to entity
              entity.add(new Object3DComponent(cube));
          }
+     }
+ }
+ ```
+ 
+ #### Change - When you add or remove components
+ 
+ A system can also be informed when adding or removing components of an entity by simply implementing the "change" method.
+ 
+ ```typescript
+ import {Entity, System, Component} from "ecs-lib";
+ 
+ export default class LogSystem extends System {
+ 
+     constructor() {
+         super([-1], 0.5); // Logs all entities every 2 seconds (0.5 FPS)
+     }
+ 
+     change(entity: Entity, added: Component<any>[], removed: Component<any>[]): void {
+         console.log(entity, added, removed);
      }
  }
  ```

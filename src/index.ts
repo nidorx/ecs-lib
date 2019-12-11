@@ -16,15 +16,16 @@ if (typeof window !== 'undefined') {
     requestAnimationFrame = setImmediate;
 }
 
-let SEQ_ENTITY = 1;
-
 let SEQ_SYSTEM = 1;
+
+let SEQ_ENTITY = 1;
 
 let SEQ_COMPONENT = 1;
 
+type Susbcription = (entity: Entity, added: Component<any>[], removed: Component<any>[]) => void;
 
 /**
- * Representação de uma entidade o ECS
+ * Representation of an entity in ECS
  */
 export abstract class Entity {
 
@@ -35,12 +36,7 @@ export abstract class Entity {
     /**
      * Lista de interessados sobre a atualiação dos componentes
      */
-    private subscriptions: Array<(entity: Entity) => void> = [];
-
-    /**
-     *
-     */
-    public id: number;
+    private subscriptions: Array<Susbcription> = [];
 
     /**
      * Informs that subscriptions have been triggered.
@@ -48,44 +44,54 @@ export abstract class Entity {
     private queued = false;
 
     /**
-     * Informa se a entidade está ativa
+     * Quais componentes foram adicionados nessa entidade antes de informar aos interessados
      */
-    public active: boolean = true;
+    private added: Component<any>[] = [];
 
     /**
-     * Componentes por tipo
-     *
-     * ATENÇÃO! Apesar de a lista de componentes ser publica, não fazer modificação na mesma, utilizar os metodos add e
-     * remove para tal
+     *  Quais componentes foram removidos dessa entidade antes de informar aos interessados
      */
-    public components: {
+    private removed: Component<any>[] = [];
+
+    /**
+     * Components by type
+     */
+    private components: {
         [key: number]: Component<any>[]
     } = {};
+
+    public id: number;
+
+    /**
+     * Informs if the entity is active
+     */
+    public active: boolean = true;
 
     constructor() {
         this.id = Entity.sequence();
     }
 
-    /**
-     *
-     */
     private dispatch() {
         if (!this.queued) {
             this.queued = true;
             // Informa aos interessados sobre a atualização
             requestAnimationFrame(() => {
                 this.queued = false;
-                this.subscriptions.forEach(cb => cb(this));
+                const added = this.added;
+                const removed = this.removed;
+                this.added = [];
+                this.removed = [];
+                this.subscriptions.forEach(cb => cb(this, added, removed));
             });
         }
     }
 
     /**
-     * Permite aos interessados receber informação quando a lista de componentes dessa entidade receber atualização
+     * Allows interested parties to receive information when this entity's component list is updated
      *
      * @param handler
      */
-    public subscribe(handler: () => void): () => Entity {
+    public subscribe(handler: Susbcription): () => Entity {
         this.subscriptions.push(handler);
 
         return () => {
@@ -98,7 +104,7 @@ export abstract class Entity {
     }
 
     /**
-     * Adiciona um componente à entidade
+     * Add a component to the entity
      *
      * @param component
      */
@@ -110,12 +116,13 @@ export abstract class Entity {
 
         this.components[type].push(component);
 
-        // Informa aos interessados sobre a atualização
+        this.added.push(component);
+
         this.dispatch();
     }
 
     /**
-     * Remove a referencia de um componente dessa entidade
+     * Removes a component's reference from this entity
      *
      * @param component
      */
@@ -128,9 +135,9 @@ export abstract class Entity {
         const idx = this.components[type].indexOf(component);
         if (idx >= 0) {
             this.components[type].splice(idx, 1);
+            this.removed.push(component);
         }
 
-        // Informa aos interessados sobre a atualização
         this.dispatch();
     }
 }
@@ -140,46 +147,46 @@ export abstract class Entity {
  */
 export type ComponentClassType<P> = (new (data: P) => Component<P>) & {
 
+    /**
+     * Static reference to type
+     */
     type: number;
 
+    /**
+     * Get all instances of this component from entity
+     *
+     * @param entity
+     */
     allFrom(entity: Entity): Component<P>[];
 
+    /**
+     * Get one instance of this component from entity
+     *
+     * @param entity
+     */
     oneFrom(entity: Entity): Component<P>;
 }
 
 /**
- * Informações sobre um componente
+ * Representation of a component in ECS
  */
 export class Component<T> {
 
     /**
-     * Registra uma nova classe de componente
+     * Register a new component class
      */
     public static register<P>(): ComponentClassType<P> {
         const typeID = SEQ_COMPONENT++;
 
         class ComponentImpl extends Component<P> {
 
-            /**
-             * Static reference to type
-             */
             static type = typeID;
 
-            /**
-             * Get all instances of this component from entity
-             *
-             * @param entity
-             */
             static allFrom(entity: Entity): ComponentImpl[] {
-                let components: ComponentImpl[] = entity.components[typeID];
+                let components: ComponentImpl[] = (entity as any).components[typeID];
                 return components || [];
             }
 
-            /**
-             * Get one instance of this component from entity
-             *
-             * @param entity
-             */
             static oneFrom(entity: Entity): ComponentImpl | undefined {
                 let components = ComponentImpl.allFrom(entity);
                 if (components && components.length > 0) {
@@ -195,14 +202,8 @@ export class Component<T> {
         return (ComponentImpl as any) as ComponentClassType<P>;
     }
 
-    /**
-     * Obtem o id do tipo do componente
-     */
     public type: number;
 
-    /**
-     * Obtem o id do tipo do componente
-     */
     public data: T;
 
     constructor(type: number, data: T) {
@@ -237,10 +238,20 @@ export abstract class System {
     /**
      * Invoked in updates, limited to the value set in the "frequency" attribute
      *
-     * @param entity Identificador da entidade
-     * @param components De uma entidade
+     * @param time
+     * @param delta
+     * @param entity
      */
     public update?(time: number, delta: number, entity: Entity): void;
+
+    /**
+     * Invoked when an expected feature of this system is added or removed from the entity.
+     *
+     * @param entity
+     * @param added
+     * @param removed
+     */
+    public change?(entity: Entity, added: Component<any>[], removed: Component<any>[]): void;
 
     /**
      * Invoked when:
@@ -251,7 +262,6 @@ export abstract class System {
      * the standard expected by this system.
      *
      * @param entity
-     * @param components
      */
     public enter?(entity: Entity): void;
 
@@ -264,7 +274,6 @@ export abstract class System {
      * the standard expected by this system
      *
      * @param entity
-     * @param components
      */
     public exit?(entity: Entity): void;
 
@@ -285,7 +294,7 @@ export abstract class System {
 }
 
 /**
- * A propria definição do ECS. Também chamada de Admin ou Manager em outras implementações
+ * The very definition of the ECS. Also called Admin or Manager in other implementations.
  */
 export default class ECS {
 
@@ -296,27 +305,27 @@ export default class ECS {
     public static Component = Component;
 
     /**
-     * Todos os Systems existentes nesse mundo
+     * All systems in this world
      */
     private systems: System[] = [];
 
     /**
-     * Todas as entidades existentes neste mundo
+     * All entities in this world
      */
     private entities: Entity[] = [];
 
     /**
-     * Indexa os sistemas que devem ser executados para cada entidade
+     * Indexes the systems that must be run for each entity
      */
     private entitySystems: { [key: number]: System[] } = {};
 
     /**
-     * Registra o último instante que um sistema foi executado neste mundo para uma entidade
+     * Records the last instant a system was run in this world for an entity
      */
     private entitySystemLastUpdate: { [key: number]: { [key: number]: number } } = {};
 
     /**
-     * Guarda as subscrições realizadas para entidades
+     * Saves subscriptions made to entities
      */
     private entitySubscription: { [key: number]: () => void } = {};
 
@@ -329,7 +338,7 @@ export default class ECS {
     }
 
     /**
-     * Obtém uma entidade por id
+     * Get an entity by id
      *
      * @param id
      */
@@ -338,36 +347,35 @@ export default class ECS {
     }
 
     /**
-     * Adiciona uma entidade nesse mundo
+     * Add an entity to this world
      *
      * @param entity
      */
     public addEntity(entity: Entity) {
-        if (!entity) {
+        if (!entity || this.entities.indexOf(entity) >= 0) {
             return;
         }
 
-        if (this.entities.indexOf(entity) < 0) {
-            this.entities.push(entity);
-            this.entitySystemLastUpdate[entity.id] = {};
+        this.entities.push(entity);
+        this.entitySystemLastUpdate[entity.id] = {};
 
-            // Remove a subscrição, se existir
-            if (this.entitySubscription[entity.id]) {
-                this.entitySubscription[entity.id]();
-            }
+        // Remove subscription
+        if (this.entitySubscription[entity.id]) {
+            this.entitySubscription[entity.id]();
+        }
 
-            // Adiciona nova subscrição
-            this.entitySubscription[entity.id] = entity.subscribe(() => {
+        // Add new subscription
+        this.entitySubscription[entity.id] = entity
+            .subscribe((entity, added, removed) => {
+                this.onEntityUpdate(entity, added, removed);
                 this.indexEntity(entity);
             });
-        }
 
         this.indexEntity(entity);
     }
 
-
     /**
-     * Remove uma entidade desse mundo
+     * Remove an entity from this world
      *
      * @param idOrInstance
      */
@@ -386,12 +394,12 @@ export default class ECS {
             this.entities.splice(idx, 1);
         }
 
-        // Remove a subscrição, se existir
+        // Remove subscription, if any
         if (this.entitySubscription[entity.id]) {
             this.entitySubscription[entity.id]();
         }
 
-        // Invoca "exit" dos sistemas
+        // Invoke system exit
         let systems = this.entitySystems[entity.id];
         if (systems) {
             systems.forEach(system => {
@@ -401,13 +409,13 @@ export default class ECS {
             });
         }
 
-        // Remove índices associativos
+        // Remove associative indexes
         delete this.entitySystems[entity.id];
         delete this.entitySystemLastUpdate[entity.id];
     }
 
     /**
-     * Adiciona o sistema nesse mundo
+     * Add the system in this world
      *
      * @param system
      */
@@ -422,12 +430,12 @@ export default class ECS {
 
         this.systems.push(system);
 
-        // Reindexa entidades
+        // Indexes entities
         this.entities.forEach(entity => {
             this.indexEntity(entity, system);
         });
 
-        // Invoca "enter" do sistema
+        // Invokes system enter
         this.entities.forEach(entity => {
             if (entity.active) {
                 let systems = this.entitySystems[entity.id];
@@ -441,7 +449,7 @@ export default class ECS {
     }
 
     /**
-     * Remove o sistema desse mundo
+     * Remove the system from this world
      *
      * @param system
      */
@@ -452,7 +460,7 @@ export default class ECS {
 
         const idx = this.systems.indexOf(system);
         if (idx >= 0) {
-            // Invoca "exit" do sistema
+            // Invoke system exit
             this.entities.forEach(entity => {
                 if (entity.active) {
                     let systems = this.entitySystems[entity.id];
@@ -466,7 +474,7 @@ export default class ECS {
 
             this.systems.splice(idx, 1);
 
-            // Reindexa entidades
+            // Indexes entities
             this.entities.forEach(entity => {
                 this.indexEntity(entity, system);
             });
@@ -474,7 +482,7 @@ export default class ECS {
     }
 
     /**
-     * Realiza a atualização dos sistemas desse mundo
+     * Invokes the "update" method of the systems in this world.
      */
     public update() {
         let now = NOW();
@@ -517,6 +525,54 @@ export default class ECS {
         });
     }
 
+    /**
+     * When an entity receives or loses components, invoking the change method of the systems
+     *
+     * @param entity
+     */
+    private onEntityUpdate(entity: Entity, added: Component<any>[], removed: Component<any>[]) {
+        if (!this.entitySystems[entity.id]) {
+            return;
+        }
+
+
+        const toNotify: System[] = this.entitySystems[entity.id].slice(0);
+
+        for (var idx = toNotify.length - 1; idx >= 0; idx--) {
+            let system = toNotify[idx];
+
+            let update = false;
+
+            // System is listening to updates on entity?
+            if (system.change) {
+                let systemComponents = system.getComponents();
+                for (var a = 0, l = added.length; a < l; a++) {
+                    if (systemComponents.indexOf(added[a].type) >= 0) {
+                        update = true;
+                        break;
+                    }
+                }
+                if (!update) {
+                    for (var a = 0, l = removed.length; a < l; a++) {
+                        if (systemComponents.indexOf(removed[a].type) >= 0) {
+                            update = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (!update) {
+                toNotify.splice(idx, 1);
+            }
+        }
+
+        // Notify systems
+        toNotify.forEach(system => {
+            (system.change as any)(entity, added, removed);
+        });
+    }
+
     private indexEntitySystem = (entity: Entity, entityComponentIDs: number[], system: System) => {
         const idx = this.entitySystems[entity.id].indexOf(system);
 
@@ -535,7 +591,7 @@ export default class ECS {
             if (entityComponentIDs.indexOf(systemComponentIDs[a]) < 0) {
                 // remove
                 if (idx >= 0) {
-                    // Informa ao sistema sobre a remoção do relacionamento
+                    // Informs the system of relationship removal
                     if (system.exit) {
                         system.exit(entity);
                     }
@@ -546,21 +602,20 @@ export default class ECS {
             }
         }
 
-        // Entidade possui todos os componentes que esse sistema precisa
+        // Entity has all the components this system needs
         if (idx < 0) {
             this.entitySystems[entity.id].push(system);
             this.entitySystemLastUpdate[entity.id][system.id] = NOW();
 
-            // Informa ao sistema sobre o novo relacionamento
+            // Informs the system about the new relationship
             if (system.enter) {
                 system.enter(entity);
             }
         }
     };
 
-
     /**
-     * Faz a indexação de uma entidade
+     * Indexes an entity
      *
      * @param entity
      */
@@ -572,15 +627,15 @@ export default class ECS {
 
         // -1 = All components. Allows a system to receive updates from all entities in the world.
         const entityComponentIDs: number[] = [-1].concat(
-            Object.keys(entity.components).map(v => Number.parseInt(v, 10))
+            Object.keys((entity as any).components).map(v => Number.parseInt(v, 10))
         );
 
         if (system) {
-            // Indexa a entidade para um sistema específico
+            // Index entity for a specific system
             this.indexEntitySystem(entity, entityComponentIDs, system);
 
         } else {
-            // Reindexa toda a entidade
+            // Indexes the entire entity
             this.systems.forEach((system) => {
                 this.indexEntitySystem(entity, entityComponentIDs, system);
             });
