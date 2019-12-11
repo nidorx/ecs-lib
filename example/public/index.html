@@ -15,9 +15,36 @@
             color: #333;
             background: #01374b;
         }
+
+        #page-title {
+            position: absolute;
+            background: #222;
+            color: #fff;
+            padding: 10px;
+            border-bottom-right-radius: 10px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+
+        #page-title h1 {
+            font-size: 14px;
+        }
+
+        #page-title a {
+            color: #ffffff;
+            display: block;
+        }
+
+
     </style>
 </head>
 <body>
+<div id="page-title">
+    <h1>ECS (Entity Component System) library for game programming</h1>
+    <a href="https://github.com/nidorx/ecs-lib/tree/master/example">https://github.com/nidorx/ecs-lib/tree/master/example</a>
+    <p><strong>KeyboardSystem:</strong> Use directional keys to move character (Cube)</p>
+    <p><strong>NPCSystem:</strong> System Controlled Character (Sphere)</p>
+</div>
 <div id="root"></div>
 <script src="assets/js/game.bundle.js"></script>
 </body>

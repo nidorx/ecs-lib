@@ -1,7 +1,7 @@
 # ecs-lib Example
 
 
-This is an example of using ecs-lib  (using Typescript and Threejs, you can use pure js too).
+This is an [example](https://nidorx.github.io/ecs-lib/) of using ecs-lib (using Typescript and Threejs, you can use pure js too).
 
 
 ```bash

@@ -5,18 +5,20 @@
   "main": "index.js",
   "private": true,
   "scripts": {
-    "start": "webpack-dev-server"
+    "start": "webpack-dev-server",
+    "build": "webpack --mode=production"
   },
   "keywords": [],
   "author": "Alex Rodin <contato@alexrodin.info>",
   "license": "MIT",
   "dependencies": {
     "dat.gui": "0.7.6",
-    "ecs-lib": "0.1.0-pre.7",
+    "ecs-lib": "0.1.0",
     "three": "0.110.0"
   },
   "devDependencies": {
     "@types/dat.gui": "0.7.5",
+    "copy-webpack-plugin": "5.1.0",
     "ts-loader": "6.2.1",
     "typescript": "3.7.2",
     "webpack": "4.41.2",

@@ -1,5 +1,6 @@
 const path = require('path');
 const output = path.resolve(__dirname, 'dist', 'assets', 'js');
+const CopyPlugin = require('copy-webpack-plugin');
 let config = {
     mode: 'development',
     entry: {
@@ -24,7 +25,15 @@ let config = {
     },
     devServer: {
         contentBase: [path.join(__dirname, 'public')]
-    }
+    },
+    plugins: [
+        new CopyPlugin([
+            {
+                from: path.resolve(__dirname, 'public'),
+                to: path.resolve(__dirname, 'dist')
+            }
+        ]),
+    ],
 };
 
 module.exports = (env, argv) => {

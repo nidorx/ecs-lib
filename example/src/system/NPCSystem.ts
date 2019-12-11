@@ -5,7 +5,7 @@ import {SphereComponent} from "../component/SphereComponent";
 /**
  * Represents artificial intelligence, controls sphere animation on map
  */
-export default class AISystem extends System {
+export default class NPCSystem extends System {
 
     constructor() {
         super([

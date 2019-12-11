@@ -7,7 +7,7 @@ import SphereFactorySystem from "./system/SphereFactorySystem";
 import CubeEntity from "./entity/CubeEntity";
 import {GUI} from "dat.gui";
 import KeyboardSystem from "./system/KeyboardSystem";
-import AISystem from "./system/AISystem";
+import NPCSystem from "./system/NPCSystem";
 import SphereEntity from "./entity/SphereEntity";
 import LogSystem from "./system/LogSystem";
 
@@ -92,25 +92,25 @@ function initializeWorld() {
 function configureGUI() {
 
     const keyboardSystem = new KeyboardSystem();
-    const aiSystem = new AISystem();
+    const aiSystem = new NPCSystem();
 
     gui = new GUI();
 
     const config = {
-        keyboard: false,
-        ai: false,
+        KeyboardSystem: false,
+        NPCSystem: false,
     };
 
-    gui.add(config, 'keyboard').onChange(() => {
-        if (config.keyboard) {
+    gui.add(config, 'KeyboardSystem').onChange(() => {
+        if (config.KeyboardSystem) {
             world.addSystem(keyboardSystem);
         } else {
             world.removeSystem(keyboardSystem);
         }
     });
 
-    gui.add(config, 'ai').onChange(() => {
-        if (config.ai) {
+    gui.add(config, 'NPCSystem').onChange(() => {
+        if (config.NPCSystem) {
             world.addSystem(aiSystem);
         } else {
             world.removeSystem(aiSystem);
