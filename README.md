@@ -20,6 +20,7 @@ For further details:
 - [Entity Systems Wiki](http://entity-systems.wikidot.com/)
 - [Evolve Your Hierarchy](http://cowboyprogramming.com/2007/01/05/evolve-your-heirachy/)
 - [ECS on Wikipedia](https://en.wikipedia.org/wiki/Entity_component_system)
+- [Entity Component Systems in Elixir](https://yos.io/2016/09/17/entity-component-systems/)
 
 ### World
 
@@ -125,11 +126,11 @@ cubeEnt.remove(boxCmp);
 **ecs-lib** entities can have more than one component per type, it is up to the programmer to control the addition and removal of entity components.
 
 ```typescript
-cube.add(new BoxComponent({width:10, height:10, depth:10}));
-cube.add(new BoxComponent({width:20, height:20, depth:20}));
+cubeEnt.add(new BoxComponent({ width:10, height:10, depth:10 }));
+cubeEnt.add(new BoxComponent({ width:20, height:20, depth:20 }));
 ```
 
-##### Subscribing to changes
+#### Subscribing to changes
 
 In **ecs-lib** you can be informed when a component is added or removed from an entity by simply subscribing to the entity.
 
@@ -169,9 +170,9 @@ If the `update` method is implemented, it will be invoked for every update in th
 
 ```typescript
 import {Entity, System} from "ecs-lib";
-import {Object3DComponent} from "../component/Object3DComponent";
-import {BoxComponent} from "../component/BoxComponent";
 import KeyboardState from "../utils/KeyboardState";
+import {BoxComponent} from "../component/BoxComponent";
+import {Object3DComponent} from "../component/Object3DComponent";
 
 export default class KeyboardSystem extends System {
 
@@ -207,9 +208,9 @@ world.addSystem(keyboardSys);
 world.removeSystem(keyboardSys);
 ```
 
-#### Limiting Frequency (SPF)
+#### Limiting Frequency (FPS)
 
-It is possible to limit the maximum number of invocations that the "update" method can perform per second (FPS) by simply entering the "frequency" parameter in the class constructor. This control is useful for example to limit the processing of physics systems to a specific frequency in order to decrease the processing cost.
+It is possible to limit the maximum number of invocations that the `update` method can perform per second (FPS) by simply entering the `frequency` parameter in the class constructor. This control is useful for example to limit the processing of physics systems to a specific frequency in order to decrease the processing cost.
 
 ```typescript
 export default class PhysicsSystem extends System {
