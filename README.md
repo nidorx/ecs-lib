@@ -1,5 +1,3 @@
-# ecs-lib
-
 <div align="center">
     <img src="./logo.jpg" width="882" /> 
 </div>
@@ -15,7 +13,6 @@ npm install --save ecs-lib
 ```
 
 ## Table of contents
-   * [ecs-lib](#ecs-lib)
    * [Table of contents](#table-of-contents)
    * [Documentation](#documentation)
       * [World](#world)
