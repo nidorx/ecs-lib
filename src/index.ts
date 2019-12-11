@@ -538,41 +538,35 @@ export default class ECS {
 
         const toNotify: System[] = this.entitySystems[entity.id].slice(0);
 
-        for (var idx = toNotify.length - 1; idx >= 0; idx--) {
-            let system = toNotify[idx];
+        outside:
+            for (var idx = toNotify.length - 1; idx >= 0; idx--) {
+                let system = toNotify[idx];
 
-            let update = false;
+                // System is listening to updates on entity?
+                if (system.change) {
+                    let systemComponents = system.getComponents();
 
-            // System is listening to updates on entity?
-            if (system.change) {
-                let systemComponents = system.getComponents();
-
-                // Listen to all systems
-                if (systemComponents.indexOf(-1) >= 0) {
-                    update = true;
-                    break;
-                }
-
-                for (var a = 0, l = added.length; a < l; a++) {
-                    if (systemComponents.indexOf(added[a].type) >= 0) {
-                        update = true;
-                        break;
+                    // Listen to all systems
+                    if (systemComponents.indexOf(-1) >= 0) {
+                        continue;
                     }
-                }
-                if (!update) {
+
+                    for (var a = 0, l = added.length; a < l; a++) {
+                        if (systemComponents.indexOf(added[a].type) >= 0) {
+                            continue outside;
+                        }
+                    }
+
                     for (var a = 0, l = removed.length; a < l; a++) {
                         if (systemComponents.indexOf(removed[a].type) >= 0) {
-                            update = true;
-                            break;
+                            continue outside;
                         }
                     }
                 }
-            }
 
-            if (!update) {
+                // dont match
                 toNotify.splice(idx, 1);
             }
-        }
 
         // Notify systems
         toNotify.forEach(system => {

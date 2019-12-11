@@ -1,6 +1,6 @@
 {
     "name": "ecs-lib",
-    "version": "0.2.0-pre.1",
+    "version": "0.2.0-pre.2",
     "description": "Tiny and easy to use ECS (Entity Component System) library for game programming and much more",
     "main": "index.js",
     "scripts": {
