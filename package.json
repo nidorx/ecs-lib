@@ -21,9 +21,10 @@
     },
     "homepage": "https://github.com/nidorx/game-ecs#readme",
     "devDependencies": {
+        "@types/node": "^12.12.17",
         "browserify": "16.5.0",
-        "semver": "6.3.0",
         "rimraf": "3.0.0",
+        "semver": "6.3.0",
         "tsify": "4.0.1",
         "typescript": "3.7.3"
     },

@@ -1,15 +1,24 @@
-let NOW: () => number = () => 0;
+let NOW: () => number;
 
-if (typeof window !== 'undefined' && window.performance) {
-    NOW = window.performance.now.bind(window.performance);
+let requestAnimationFrame: (cb: () => void) => void = () => 0;
+
+if (typeof window !== 'undefined') {
+    requestAnimationFrame = window.requestAnimationFrame;
+    if (window.performance) {
+        NOW = window.performance.now.bind(window.performance);
+    }
 } else {
     const start = Date.now();
     NOW = () => {
         return Date.now() - start;
     };
+
+    requestAnimationFrame = setImmediate;
 }
 
 let SEQ_ENTITY = 1;
+
+let SEQ_SYSTEM = 1;
 
 let SEQ_COMPONENT = 1;
 
@@ -26,9 +35,17 @@ export abstract class Entity {
     /**
      * Lista de interessados sobre a atualiação dos componentes
      */
-    private subscriptions: Array<() => void> = [];
+    private subscriptions: Array<(entity: Entity) => void> = [];
 
+    /**
+     *
+     */
     public id: number;
+
+    /**
+     * Informs that subscriptions have been triggered.
+     */
+    private queued = false;
 
     /**
      * Informa se a entidade está ativa
@@ -50,11 +67,25 @@ export abstract class Entity {
     }
 
     /**
+     *
+     */
+    private dispatch() {
+        if (!this.queued) {
+            this.queued = true;
+            // Informa aos interessados sobre a atualização
+            requestAnimationFrame(() => {
+                this.queued = false;
+                this.subscriptions.forEach(cb => cb(this));
+            });
+        }
+    }
+
+    /**
      * Permite aos interessados receber informação quando a lista de componentes dessa entidade receber atualização
      *
      * @param handler
      */
-    public subscribe(handler: () => void): () => void {
+    public subscribe(handler: () => void): () => Entity {
         this.subscriptions.push(handler);
 
         return () => {
@@ -62,6 +93,7 @@ export abstract class Entity {
             if (idx >= 0) {
                 this.subscriptions.splice(idx, 1);
             }
+            return this;
         }
     }
 
@@ -79,9 +111,7 @@ export abstract class Entity {
         this.components[type].push(component);
 
         // Informa aos interessados sobre a atualização
-        requestAnimationFrame(() => {
-            this.subscriptions.forEach(cb => cb());
-        });
+        this.dispatch();
     }
 
     /**
@@ -101,9 +131,7 @@ export abstract class Entity {
         }
 
         // Informa aos interessados sobre a atualização
-        requestAnimationFrame(() => {
-            this.subscriptions.forEach(cb => cb());
-        });
+        this.dispatch();
     }
 }
 
@@ -185,25 +213,42 @@ export class Component<T> {
 
 
 /**
- * Representação de um sistema no ECS
+ * Represents the logic that transforms component data of an entity from its current state to its next state. A system
+ * runs on entities that have a specific set of component types.
  */
 export abstract class System {
 
     /**
-     * Implementação deve informar quais tipo de componentes esse sistema opera sobre
+     * Identificador único de uma instancia deste sistema
+     */
+    public id: number;
+
+    /**
+     * IDs of the types of components this system expects the entity to have before it can act on. If you want to
+     * create a system that acts on all entities, enter [-1]
      */
     private components: number[] = [];
 
     /**
-     * Invocado durante atualização
+     * The maximum times per second this system should be updated.
+     */
+    public frequence: number;
+
+    /**
+     * Invoked in updates, limited to the value set in the "frequency" attribute
+     *
      * @param entity Identificador da entidade
      * @param components De uma entidade
      */
     public update?(time: number, delta: number, entity: Entity): void;
 
     /**
-     * Invocado sempre que uma entidade correspondente é adicionada no sistema, ou para todas as entidades existntes
-     * quando o sistema é adicionado no mundo
+     * Invoked when:
+     * a) An entity with the characteristics (components) expected by this system is added in the world;
+     * b) This system is added in the world and this world has one or more entities with the characteristics expected by
+     * this system;
+     * c) An existing entity in the same world receives a new component at runtime and all of its new components match
+     * the standard expected by this system.
      *
      * @param entity
      * @param components
@@ -211,8 +256,12 @@ export abstract class System {
     public enter?(entity: Entity): void;
 
     /**
-     * Invocado sempre que uma entidade correspondente é removida do sistema, ou para todas as entidades existntes
-     * quando o sistema é removido do mundo
+     * Invoked when:
+     * a) An entity with the characteristics (components) expected by this system is removed from the world;
+     * b) This system is removed from the world and this world has one or more entities with the characteristics
+     * expected by this system;
+     * c) An existing entity in the same world loses a component at runtime and its new component set no longer matches
+     * the standard expected by this system
      *
      * @param entity
      * @param components
@@ -220,12 +269,14 @@ export abstract class System {
     public exit?(entity: Entity): void;
 
     /**
-     * Necessário informar os componentes
-     *
-     * @param components
+     * @param components IDs of the types of components this system expects the entity to have before it can act on.
+     * If you want to create a system that acts on all entities, enter [-1]
+     * @param frequence The maximum times per second this system should be updated. Defaults 0
      */
-    constructor(components: number[]) {
+    constructor(components: number[], frequence: number = 0) {
+        this.id = SEQ_SYSTEM++;
         this.components = components;
+        this.frequence = frequence;
     }
 
     public getComponents(): number[] {
@@ -238,13 +289,11 @@ export abstract class System {
  */
 export default class ECS {
 
+    public static System = System;
+
     public static Entity = Entity;
 
     public static Component = Component;
-
-    public static System = System;
-
-    private lastUpdate: number = NOW();
 
     /**
      * Todos os Systems existentes nesse mundo
@@ -259,22 +308,23 @@ export default class ECS {
     /**
      * Indexa os sistemas que devem ser executados para cada entidade
      */
-    private entitiesSystems: {
-        [key: number]: System[]
-    } = {};
+    private entitySystems: { [key: number]: System[] } = {};
+
+    /**
+     * Registra o último instante que um sistema foi executado neste mundo
+     */
+    private systemsLastUpdate: { [key: number]: number } = {};
 
     /**
      * Guarda as subscrições realizadas para entidades
      */
-    private entitiesSubscriptions: {
-        [key: number]: () => void
-    } = {};
+    private entitySubscription: { [key: number]: () => void } = {};
 
     constructor(systems?: System[]) {
         if (systems) {
             systems.forEach(system => {
                 this.addSystem(system);
-            })
+            });
         }
     }
 
@@ -301,12 +351,12 @@ export default class ECS {
             this.entities.push(entity);
 
             // Remove a subscrição, se existir
-            if (this.entitiesSubscriptions[entity.id]) {
-                this.entitiesSubscriptions[entity.id]();
+            if (this.entitySubscription[entity.id]) {
+                this.entitySubscription[entity.id]();
             }
 
             // Adiciona nova subscrição
-            this.entitiesSubscriptions[entity.id] = entity.subscribe(() => {
+            this.entitySubscription[entity.id] = entity.subscribe(() => {
                 this.indexEntity(entity);
             });
         }
@@ -336,12 +386,12 @@ export default class ECS {
         }
 
         // Remove a subscrição, se existir
-        if (this.entitiesSubscriptions[entity.id]) {
-            this.entitiesSubscriptions[entity.id]();
+        if (this.entitySubscription[entity.id]) {
+            this.entitySubscription[entity.id]();
         }
 
         // Invoca "exit" dos sistemas
-        let systems = this.entitiesSystems[entity.id];
+        let systems = this.entitySystems[entity.id];
         if (systems) {
             systems.forEach(system => {
                 if (system.exit) {
@@ -351,7 +401,7 @@ export default class ECS {
         }
 
         // Remove índices associativos
-        this.entitiesSystems[entity.id] = [];
+        this.entitySystems[entity.id] = [];
     }
 
     /**
@@ -369,6 +419,7 @@ export default class ECS {
         }
 
         this.systems.push(system);
+        this.systemsLastUpdate[system.id] = NOW();
 
         // Reindexa entidades
         this.entities.forEach(entity => {
@@ -382,7 +433,7 @@ export default class ECS {
                 return this.removeEntity(entity);
             }
 
-            let systems = this.entitiesSystems[entity.id];
+            let systems = this.entitySystems[entity.id];
             if (systems && systems.indexOf(system) >= 0) {
                 if (system.enter) {
                     system.enter(entity);
@@ -410,7 +461,7 @@ export default class ECS {
                     return this.removeEntity(entity);
                 }
 
-                let systems = this.entitiesSystems[entity.id];
+                let systems = this.entitySystems[entity.id];
                 if (systems && systems.indexOf(system) >= 0) {
                     if (system.exit) {
                         system.exit(entity);
@@ -419,6 +470,7 @@ export default class ECS {
             });
 
             this.systems.splice(idx, 1);
+            delete this.systemsLastUpdate[system.id];
 
             // Reindexa entidades
             this.entities.forEach(entity => {
@@ -432,7 +484,6 @@ export default class ECS {
      */
     public update() {
         let now = NOW();
-        let elapsed = now - this.lastUpdate;
 
         this.entities.forEach(entity => {
             if (!entity.active) {
@@ -440,21 +491,74 @@ export default class ECS {
                 return this.removeEntity(entity);
             }
 
-            let systems = this.entitiesSystems[entity.id];
+            let systems = this.entitySystems[entity.id];
             if (!systems) {
                 return;
             }
 
+            let elapsed, interval;
+
             systems.forEach(system => {
                 if (system.update) {
+
+                    elapsed = now - this.systemsLastUpdate[system.id];
+
+                    // Limit FPS
+                    if (system.frequence > 0) {
+                        interval = 1000 / system.frequence;
+                        if (elapsed < interval) {
+                            return;
+                        }
+
+                        // adjust for fpsInterval not being a multiple of RAF's interval (16.7ms)
+                        this.systemsLastUpdate[system.id] = now - (elapsed % interval);
+                    } else {
+                        this.systemsLastUpdate[system.id] = now;
+                    }
+
                     system.update(now, elapsed, entity);
                 }
             });
         });
-
-
-        this.lastUpdate = now;
     }
+
+    private indexEntitySystem = (entity: Entity, entityComponentIDs: number[], system: System) => {
+        const idx = this.entitySystems[entity.id].indexOf(system);
+
+        // Sistema não existe neste mundo, remove indexação
+        if (this.systems.indexOf(system) < 0) {
+            if (idx >= 0) {
+                this.entitySystems[entity.id].splice(idx, 1);
+            }
+            return;
+        }
+
+        const systemComponentIDs = system.getComponents();
+
+        for (var a = 0, l = systemComponentIDs.length; a < l; a++) {
+            if (entityComponentIDs.indexOf(systemComponentIDs[a]) < 0) {
+                // remove
+                if (idx >= 0) {
+                    // Informa ao sistema sobre a remoção do relacionamento
+                    if (system.exit) {
+                        system.exit(entity);
+                    }
+                    this.entitySystems[entity.id].splice(idx, 1);
+                }
+                return
+            }
+        }
+
+        // Entidade possui todos os componentes que esse sistema precisa
+        if (idx < 0) {
+            this.entitySystems[entity.id].push(system);
+
+            // Informa ao sistema sobre o novo relacionamento
+            if (system.enter) {
+                system.enter(entity);
+            }
+        }
+    };
 
 
     /**
@@ -464,58 +568,24 @@ export default class ECS {
      */
     private indexEntity(entity: Entity, system?: System) {
 
-        if (!this.entitiesSystems[entity.id]) {
-            this.entitiesSystems[entity.id] = [];
+        if (!this.entitySystems[entity.id]) {
+            this.entitySystems[entity.id] = [];
         }
-        let entityComponents: number[] = Object.keys(entity.components).map(v => Number.parseInt(v, 10));
 
-        const indexSystem = (system: System) => {
-
-            const idx = this.entitiesSystems[entity.id].indexOf(system);
-
-            // Sistema não existe neste mundo, remove indexação
-            if (this.systems.indexOf(system) < 0) {
-                if (idx >= 0) {
-                    this.entitiesSystems[entity.id].splice(idx, 1);
-                }
-                return;
-            }
-
-
-            let systemComponents = system.getComponents();
-
-            for (var a = 0, l = systemComponents.length; a < l; a++) {
-                if (entityComponents.indexOf(systemComponents[a]) < 0) {
-                    // remove
-                    if (idx >= 0) {
-                        // Informa ao sistema sobre a remoção do relacionamento
-                        if (system.exit) {
-                            system.exit(entity);
-                        }
-                        this.entitiesSystems[entity.id].splice(idx, 1);
-                    }
-                    return
-                }
-            }
-
-            // Entidade possui todos os componentes que esse sistema precisa
-            if (idx < 0) {
-                this.entitiesSystems[entity.id].push(system);
-
-                // Informa ao sistema sobre o novo relacionamento
-                if (system.enter) {
-                    system.enter(entity);
-                }
-            }
-        };
+        // -1 = All components. Allows a system to receive updates from all entities in the world.
+        const entityComponentIDs: number[] = [-1].concat(
+            Object.keys(entity.components).map(v => Number.parseInt(v, 10))
+        );
 
         if (system) {
             // Indexa a entidade para um sistema específico
-            indexSystem(system);
+            this.indexEntitySystem(entity, entityComponentIDs, system);
 
         } else {
             // Reindexa toda a entidade
-            this.systems.forEach(indexSystem);
+            this.systems.forEach((system) => {
+                this.indexEntitySystem(entity, entityComponentIDs, system);
+            });
         }
     }
 }
