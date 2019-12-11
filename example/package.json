@@ -12,7 +12,7 @@
   "license": "MIT",
   "dependencies": {
     "dat.gui": "0.7.6",
-    "ecs-lib": "0.1.0-pre.6",
+    "ecs-lib": "0.1.0-pre.7",
     "three": "0.110.0"
   },
   "devDependencies": {

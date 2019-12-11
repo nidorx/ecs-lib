@@ -49,21 +49,23 @@ function exec(command, callback) {
     });
 }
 
+if (fs.existsSync('./index.js')) {
+    fs.unlinkSync('./index.js');
+}
 
-fs.unlinkSync('./index.js');
-fs.unlinkSync('./index.d.ts');
+if (fs.existsSync('./index.d.ts')) {
+    fs.unlinkSync('./index.d.ts');
+}
 
 var package = JSON.parse(fs.readFileSync(__dirname + '/package.json'));
 
 exec('npm run-script build')
-// publicação
     .then(exec.bind(undefined, 'npm publish', null))
-    // commit e push
-    // .then(exec.bind(undefined, 'git add --all', null))
-    // .then(exec.bind(undefined, 'git commit -m "Publicação da versão v' + package.version + '"', null))
-    // .then(exec.bind(undefined, 'git push', null))
-    // .then(exec.bind(undefined, 'git tag v' + package.version, null))
-    // .then(exec.bind(undefined, 'git push --tags', null))
+    .then(exec.bind(undefined, 'git add --all', null))
+    .then(exec.bind(undefined, 'git commit -m "Publicação da versão v' + package.version + '"', null))
+    .then(exec.bind(undefined, 'git push', null))
+    .then(exec.bind(undefined, 'git tag v' + package.version, null))
+    .then(exec.bind(undefined, 'git push --tags', null))
     .catch(err => {
         console.error(err);
     });

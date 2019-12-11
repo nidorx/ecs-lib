@@ -311,9 +311,9 @@ export default class ECS {
     private entitySystems: { [key: number]: System[] } = {};
 
     /**
-     * Registra o último instante que um sistema foi executado neste mundo
+     * Registra o último instante que um sistema foi executado neste mundo para uma entidade
      */
-    private systemsLastUpdate: { [key: number]: number } = {};
+    private entitySystemLastUpdate: { [key: number]: { [key: number]: number } } = {};
 
     /**
      * Guarda as subscrições realizadas para entidades
@@ -349,6 +349,7 @@ export default class ECS {
 
         if (this.entities.indexOf(entity) < 0) {
             this.entities.push(entity);
+            this.entitySystemLastUpdate[entity.id] = {};
 
             // Remove a subscrição, se existir
             if (this.entitySubscription[entity.id]) {
@@ -401,7 +402,8 @@ export default class ECS {
         }
 
         // Remove índices associativos
-        this.entitySystems[entity.id] = [];
+        delete this.entitySystems[entity.id];
+        delete this.entitySystemLastUpdate[entity.id];
     }
 
     /**
@@ -419,7 +421,6 @@ export default class ECS {
         }
 
         this.systems.push(system);
-        this.systemsLastUpdate[system.id] = NOW();
 
         // Reindexa entidades
         this.entities.forEach(entity => {
@@ -428,15 +429,12 @@ export default class ECS {
 
         // Invoca "enter" do sistema
         this.entities.forEach(entity => {
-            if (!entity.active) {
-                // Entidade inativa
-                return this.removeEntity(entity);
-            }
-
-            let systems = this.entitySystems[entity.id];
-            if (systems && systems.indexOf(system) >= 0) {
-                if (system.enter) {
-                    system.enter(entity);
+            if (entity.active) {
+                let systems = this.entitySystems[entity.id];
+                if (systems && systems.indexOf(system) >= 0) {
+                    if (system.enter) {
+                        system.enter(entity);
+                    }
                 }
             }
         });
@@ -456,21 +454,17 @@ export default class ECS {
         if (idx >= 0) {
             // Invoca "exit" do sistema
             this.entities.forEach(entity => {
-                if (!entity.active) {
-                    // Entidade inativa
-                    return this.removeEntity(entity);
-                }
-
-                let systems = this.entitySystems[entity.id];
-                if (systems && systems.indexOf(system) >= 0) {
-                    if (system.exit) {
-                        system.exit(entity);
+                if (entity.active) {
+                    let systems = this.entitySystems[entity.id];
+                    if (systems && systems.indexOf(system) >= 0) {
+                        if (system.exit) {
+                            system.exit(entity);
+                        }
                     }
                 }
             });
 
             this.systems.splice(idx, 1);
-            delete this.systemsLastUpdate[system.id];
 
             // Reindexa entidades
             this.entities.forEach(entity => {
@@ -496,12 +490,13 @@ export default class ECS {
                 return;
             }
 
+            const entityLastUpdates = this.entitySystemLastUpdate[entity.id];
             let elapsed, interval;
 
             systems.forEach(system => {
                 if (system.update) {
 
-                    elapsed = now - this.systemsLastUpdate[system.id];
+                    elapsed = now - entityLastUpdates[system.id];
 
                     // Limit FPS
                     if (system.frequence > 0) {
@@ -511,9 +506,9 @@ export default class ECS {
                         }
 
                         // adjust for fpsInterval not being a multiple of RAF's interval (16.7ms)
-                        this.systemsLastUpdate[system.id] = now - (elapsed % interval);
+                        entityLastUpdates[system.id] = now - (elapsed % interval);
                     } else {
-                        this.systemsLastUpdate[system.id] = now;
+                        entityLastUpdates[system.id] = now;
                     }
 
                     system.update(now, elapsed, entity);
@@ -529,6 +524,7 @@ export default class ECS {
         if (this.systems.indexOf(system) < 0) {
             if (idx >= 0) {
                 this.entitySystems[entity.id].splice(idx, 1);
+                delete this.entitySystemLastUpdate[entity.id][system.id];
             }
             return;
         }
@@ -544,6 +540,7 @@ export default class ECS {
                         system.exit(entity);
                     }
                     this.entitySystems[entity.id].splice(idx, 1);
+                    delete this.entitySystemLastUpdate[entity.id][system.id];
                 }
                 return
             }
@@ -552,6 +549,7 @@ export default class ECS {
         // Entidade possui todos os componentes que esse sistema precisa
         if (idx < 0) {
             this.entitySystems[entity.id].push(system);
+            this.entitySystemLastUpdate[entity.id][system.id] = NOW();
 
             // Informa ao sistema sobre o novo relacionamento
             if (system.enter) {

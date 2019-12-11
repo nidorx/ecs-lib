@@ -9,6 +9,7 @@ import {GUI} from "dat.gui";
 import KeyboardSystem from "./system/KeyboardSystem";
 import AISystem from "./system/AISystem";
 import SphereEntity from "./entity/SphereEntity";
+import LogSystem from "./system/LogSystem";
 
 var scene: Scene,
     camera: PerspectiveCamera,
@@ -68,7 +69,8 @@ function initializeWorld() {
     world = new ECS([
         new SceneObjectSystem(scene),
         new SphereFactorySystem(),
-        new CubeFactorySystem()
+        new CubeFactorySystem(),
+        new LogSystem()
     ]);
 
     // Add our player (CUBE)
