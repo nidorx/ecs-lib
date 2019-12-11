@@ -546,6 +546,13 @@ export default class ECS {
             // System is listening to updates on entity?
             if (system.change) {
                 let systemComponents = system.getComponents();
+
+                // Listen to all systems
+                if (systemComponents.indexOf(-1) >= 0) {
+                    update = true;
+                    break;
+                }
+
                 for (var a = 0, l = added.length; a < l; a++) {
                     if (systemComponents.indexOf(added[a].type) >= 0) {
                         update = true;

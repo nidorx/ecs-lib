@@ -1,4 +1,5 @@
-import {Entity, System} from "ecs-lib";
+import {Component, Entity, System} from "ecs-lib";
+import {NodeLib} from "three/examples/jsm/nodes/core/NodeLib";
 
 export default class LogSystem extends System {
 
@@ -8,6 +9,10 @@ export default class LogSystem extends System {
 
     update(time: number, delta: number, entity: Entity): void {
         console.log('LogSystem', entity);
+    }
+
+    change(entity: Entity, added: Component<any>[], removed: Component<any>[]): void {
+        console.log('LogSystem::change', entity, added, removed);
     }
 }
 

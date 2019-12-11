@@ -1,5 +1,5 @@
 import {BoxGeometry, Mesh, MeshBasicMaterial} from "three";
-import {Entity, System} from "ecs-lib";
+import {Component, Entity, System} from "ecs-lib";
 import {Object3DComponent} from "../component/Object3DComponent";
 import {ColorComponent} from "../component/ColorComponent";
 import {BoxComponent} from "../component/BoxComponent";
@@ -29,6 +29,10 @@ export default class CubeFactorySystem extends System {
             // Append new component to entity
             entity.add(new Object3DComponent(cube));
         }
+    }
+
+    change(entity: Entity, added: Component<any>[], removed: Component<any>[]): void {
+        console.log('CubeFactorySystem::change', entity, added, removed);
     }
 }
 
