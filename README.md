@@ -33,7 +33,7 @@ npm install --save ecs-lib
    * [API](#api)
       * [ECS](#ecs)
       * [Component](#component-1)
-         * [Component&lt;T&gt;](#component-t)
+         * [Component&lt;T&gt;](#componentt)
       * [Entity](#entity-1)
       * [System](#system-1)
    * [Feedback, Requests and Roadmap](#feedback-requests-and-roadmap)
@@ -390,20 +390,20 @@ export default class SceneObjectSystem extends System {
 | `System` | `System`  | _`static`_ reference to `System` class. _(`ECS.System`)_ |
 | `Entity` | `Entity`  | _`static`_ reference to `Entity` class. _(`ECS.Entity`)_ |
 | `Component` | `Component`  | _`static`_ reference to `Component` class. _(`ECS.Component`)_ |
-| `(systems?: System[])` | `constructor`  |  |
+| `constructor` | `(systems?: System[])` |  |
 | `getEntity(id: number)` | <code>Entity &#124; undefined</code>  | Get an entity by id |
 | `addEntity(entity: Entity)` |  | Add an entity to this world |
 | <code>removeEntity(entity: number &#124; Entity)</code> |  | Remove an entity from this world |
 | `addSystem(system: System)` |  | Add a system in this world |
 | `removeSystem(system: System)` |  | Remove a system from this world |
-| `update()` |  | Invokes the "update" method of the systems in this world. |
+| `update()` |  | Invokes the `update` method of the systems in this world. |
 | <h3>Component</h2> |
 | `register<T>()` | `Class<Component<T>>`  | _`static`_ Register a new component class |
 | <h3>Component&lt;T&gt;</h2> |
 | `type` | `number`  | _`static`_ reference to type id |
 | `allFrom(entity: Entity)` | `Component<T>[]`  | _`static`_ Get all instances of this component from entity |
 | `oneFrom(entity: Entity)` | `Component<T>`  | _`static`_ Get one instance of this component from entity |
-| `(data: T)` | `constructor`  | Create a new instance of this custom component |
+| `constructor` | `(data: T)` | Create a new instance of this custom component |
 | `type` | `number`  | reference to type id from instance |
 | `data` | `T`  | reference to raw data from instance |
 | <h3>Entity</h2> |
@@ -413,7 +413,7 @@ export default class SceneObjectSystem extends System {
 | `remove(component: Component)` |  | Removes a component's reference from this entity |
 | `subscribe(handler: Susbcription)` | `cancel = () => Entity`  | Allows interested parties to receive information when this entity's component list is updated <br> `Susbcription = (entity: Entity, added: Component[], removed: Component[]) => void` |
 | <h3>System</h2> |
-| `(components: number[], frequence: number = 0)` | `constructor`  |  |
+| `constructor` | `(components: number[], frequence: number = 0)`  |  |
 | `id` | `number` | Unique identifier of an instance of this system |
 | `frequence` | `number` | The maximum times per second this system should be updated |
 | `update(time: number, delta: number, entity: Entity)` | | Invoked in updates, limited to the value set in the "frequency" attribute |
