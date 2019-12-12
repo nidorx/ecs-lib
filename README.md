@@ -13,7 +13,6 @@ npm install --save ecs-lib
 ```
 
 ## Table of contents
-   * [Table of contents](#table-of-contents)
    * [Documentation](#documentation)
       * [World](#world)
       * [Component](#component)
