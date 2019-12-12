@@ -2,7 +2,7 @@
     <img src="./logo.jpg" width="882" /> 
 </div>
 
-**ecs-lib** is a tiny and easy to use [ECS _(Entity Component System)_](https://en.wikipedia.org/wiki/Entity_component_system) library for game programming and much more. It's written in Typescript but you can use on node.js an web browser too. 
+**ecs-lib** is a tiny and easy to use [ECS _(Entity Component System)_](https://en.wikipedia.org/wiki/Entity_component_system) library for game programming. It's written in Typescript but you can use on node.js an web browser too. 
 
 
 **TLDR;** Take a look at the [example](https://nidorx.github.io/ecs-lib/) and its [source code](https://github.com/nidorx/ecs-lib/tree/master/example)
@@ -20,16 +20,16 @@ npm install --save ecs-lib
          * [Raw data access](#raw-data-access)
       * [Entity](#entity)
          * [Adding and removing from the world](#adding-and-removing-from-the-world)
-         * [Adding and Removing Components](#adding-and-removing-components)
+         * [Adding and removing components](#adding-and-removing-components)
          * [Subscribing to changes](#subscribing-to-changes)
-         * [Accessing Components](#accessing-components)
+         * [Accessing components](#accessing-components)
       * [System](#system)
          * [Adding and removing from the world](#adding-and-removing-from-the-world-1)
-         * [Limiting Frequency (FPS)](#limiting-frequency-fps)
-         * [Global Systems - All Entities](#global-systems---all-entities)
-         * [Enter - When Adding New Entities](#enter---when-adding-new-entities)
+         * [Limiting frequency (FPS)](#limiting-frequency-fps)
+         * [Global systems - all entities](#global-systems---all-entities)
+         * [Enter - When adding new entities](#enter---when-adding-new-entities)
          * [Change - When you add or remove components](#change---when-you-add-or-remove-components)
-         * [Exit - When Removing Entities](#exit---when-removing-entities)
+         * [Exit - When removing entities](#exit---when-removing-entities)
    * [API](#api)
       * [ECS](#ecs)
       * [Component](#component-1)
@@ -96,6 +96,7 @@ console.log(BoxComponent.type === boxCmp.type);
 
 > You can also have access to the `Component` class from ECS (`ECS.Component.register`)
 
+
 #### Raw data access
 
 Component instance displays raw data by property `data`
@@ -128,6 +129,7 @@ export default class CubeEntity extends Entity {
 
 > You can also have access to the `Entity` class from ECS (`ECS.Entity`)
 
+
 #### Adding and removing from the world
 
 You can add multiple instances of the same entity in the world. Each entity is given a **unique identifier** at creation time.
@@ -147,7 +149,7 @@ world.removeEntity(cubeEnt);
 world.removeEntity(cubeEnt.id);
 ```
 
-#### Adding and Removing Components 
+#### Adding and removing components 
 
 At any point in the entity's life cycle, you can add or remove components, using `add` and `remove` methods.
 
@@ -177,7 +179,8 @@ const cancel = cubeEnt.subscribe((entity)=>{
 cancel();
 ```
 
-#### Accessing Components
+#### Accessing components
+
 To gain access to the components of an entity, simply use the `allFrom` and `oneFrom` methods of the `Component` class to get all or the first instance of this component respectively.
 
 ```typescript
@@ -241,7 +244,7 @@ world.addSystem(keyboardSys);
 world.removeSystem(keyboardSys);
 ```
 
-#### Limiting Frequency (FPS)
+#### Limiting frequency (FPS)
 
 It is possible to limit the maximum number of invocations that the `update` method can perform per second (FPS) by simply entering the `frequency` parameter in the class constructor. This control is useful for example to limit the processing of physics systems to a specific frequency in order to decrease the processing cost.
 
@@ -264,7 +267,7 @@ export default class PhysicsSystem extends System {
 }
 ```
 
-#### Global Systems - All Entities
+#### Global systems - all entities
 
 You can also create systems that receive updates from all entities, regardless of existing components. To do this, simply enter `[-1]` in the system builder. This functionality may be useful for debugging and other rating mechanisms for your game.
 
@@ -284,8 +287,7 @@ export default class LogSystem extends System {
 ```
 
 
-#### Enter - When Adding New Entities
-
+#### Enter - When adding new entities
 
 Invoked when:
 
@@ -348,7 +350,7 @@ Invoked when:
  ```
 
 
-#### Exit - When Removing Entities
+#### Exit - When removing entities
 
 Invoked when:
  
