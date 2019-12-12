@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>lib-ecs - Example</title>
     <style>
         html {
@@ -35,6 +36,82 @@
             display: block;
         }
 
+        .arrow {
+            border: 40px solid rgba(133, 133, 133, 0.7);
+            position: absolute;
+            transition: all 0.25s ease-out;
+        }
+
+        .arrow:hover,
+        .arrow:active {
+            border-color: rgba(133, 133, 133, 0.9);
+        }
+
+        .arrow.up {
+            width: 0;
+            height: 0;
+            border-left-color: transparent;
+            border-right-color: transparent;
+            border-top-color: transparent;
+            top: -55px;
+            left: 30px;
+        }
+
+        .arrow.down {
+            width: 0;
+            height: 0;
+            border-left-color: transparent;
+            border-right-color: transparent;
+            border-bottom-color: transparent;
+            bottom: -55px;
+            left: 30px;
+        }
+
+        .arrow.right {
+            width: 0;
+            height: 0;
+            border-top-color: transparent;
+            border-bottom-color: transparent;
+            border-right-color: transparent;
+            top: 30px;
+            right: -55px;
+        }
+
+        .arrow.left {
+            width: 0;
+            height: 0;
+            border-top-color: transparent;
+            border-bottom-color: transparent;
+            border-left-color: transparent;
+            top: 30px;
+            left: -55px;
+        }
+
+        #joypad {
+            display: none;
+            position: absolute;
+            bottom: 50px;
+            left: 50px;
+            z-index: 2000;
+            width: 140px;
+            height: 140px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            user-select: none;
+        }
+
+        @media only screen and (max-width: 768px) {
+            #joypad {
+                display: block;
+            }
+
+            #page-title{
+                padding-top: 80px;
+                padding-bottom: 0;
+                padding-right: 0;
+                border-radius: 0;
+            }
+        }
 
     </style>
 </head>
@@ -46,6 +123,43 @@
     <p><strong>NPCSystem:</strong> System Controlled Character (Sphere)</p>
 </div>
 <div id="root"></div>
+<div id="joypad">
+    <a
+            class="arrow up"
+            ontouchstart="joypadKeyDown('up')"
+            onmousedown="joypadKeyDown('up')"
+            ontouchend="joypadKeyUp('up')"
+            onmouseup="joypadKeyUp('up')"
+            onmouseleave="joypadKeyUp('up')"
+    >&nbsp;</a>
+
+    <a
+            class="arrow down"
+            ontouchstart="joypadKeyDown('down')"
+            onmousedown="joypadKeyDown('down')"
+            ontouchend="joypadKeyUp('down')"
+            onmouseup="joypadKeyUp('down')"
+            onmouseleave="joypadKeyUp('down')"
+    >&nbsp;</a>
+
+    <a
+            class="arrow left"
+            ontouchstart="joypadKeyDown('left')"
+            onmousedown="joypadKeyDown('left')"
+            ontouchend="joypadKeyUp('left')"
+            onmouseup="joypadKeyUp('left')"
+            onmouseleave="joypadKeyUp('left')"
+    >&nbsp;</a>
+
+    <a
+            class="arrow right"
+            ontouchstart="joypadKeyDown('right')"
+            onmousedown="joypadKeyDown('right')"
+            ontouchend="joypadKeyUp('right')"
+            onmouseup="joypadKeyUp('right')"
+            onmouseleave="joypadKeyUp('right')"
+    >&nbsp;</a>
+</div>
 <script src="assets/js/game.bundle.js"></script>
 </body>
 </html>

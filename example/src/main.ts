@@ -86,7 +86,7 @@ function initializeWorld() {
         radius: 5,
         heightSegments: 8,
         widthSegments: 8
-    }, '#00FF00'));
+    }, '#0000FF'));
 }
 
 function configureGUI() {

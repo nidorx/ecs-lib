@@ -50,6 +50,26 @@ class KeyboardState {
         // bind keyEvents
         document.addEventListener("keydown", this.onKeyDown, false);
         document.addEventListener("keyup", this.onKeyUp, false);
+
+        (window as any).joypadKeyDown = (key: number) => {
+            this.onKeyDown({
+                keyCode: KeyboardState.ALIAS[key],
+                altKey: false,
+                metaKey: false,
+                ctrlKey: false,
+                shiftKey: false
+            } as any);
+        };
+
+        (window as any).joypadKeyUp = (key: string) => {
+            this.onKeyUp({
+                keyCode: KeyboardState.ALIAS[key],
+                altKey: false,
+                metaKey: false,
+                ctrlKey: false,
+                shiftKey: false
+            } as any);
+        };
     }
 
     pressed(keyDesc: string) {
