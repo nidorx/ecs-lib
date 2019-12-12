@@ -27,6 +27,7 @@ npm install --save ecs-lib
          * [Adding and removing from the world](#adding-and-removing-from-the-world-1)
          * [Limiting frequency (FPS)](#limiting-frequency-fps)
          * [Global systems - all entities](#global-systems---all-entities)
+         * [Before and After update](#before-and-after-update)
          * [Enter - When adding new entities](#enter---when-adding-new-entities)
          * [Change - When you add or remove components](#change---when-you-add-or-remove-components)
          * [Exit - When removing entities](#exit---when-removing-entities)
@@ -286,6 +287,33 @@ export default class LogSystem extends System {
 }
 ```
 
+#### Before and After update
+
+If necessary, the system can be informed before and after executing the update of its entities in this interaction (respecting the execution frequency defined for that system).
+
+```typescript
+import {Entity, System} from "ecs-lib";
+
+export default class LogSystem extends System {
+
+    constructor() {
+        super([-1], 0.5); // Logs all entities every 2 seconds (0.5 FPS)
+    }
+
+    beforeUpdateAll(time: number): void {
+        console.log('Before update');
+    }
+    
+    update(time: number, delta: number, entity: Entity): void {
+        console.log(entity);
+    }
+    
+    afterUpdateAll(time: number, entities: Entity[]): void {
+        console.log('After update');
+    }
+}
+```
+
 
 #### Enter - When adding new entities
 
@@ -418,7 +446,9 @@ export default class SceneObjectSystem extends System {
 | `constructor` | `(components: number[], frequence: number = 0)`  |  |
 | `id` | `number` | Unique identifier of an instance of this system |
 | `frequence` | `number` | The maximum times per second this system should be updated |
+| `beforeUpdateAll(time: number)` | | Invoked before updating entities available for this system. It is only invoked when there are entities with the characteristics expected by this system. |
 | `update(time: number, delta: number, entity: Entity)` | | Invoked in updates, limited to the value set in the "frequency" attribute |
+| `afterUpdateAll(time: number, entities: Entity[])` | | Invoked after performing update of entities available for this system. It is only invoked when there are entities with the characteristics expected by this system. |
 | `change(entity: Entity, added: Component<any>[], removed: Component<any>[])` | | Invoked when an expected feature of this system is added or removed from the entity |
 | `enter(entity: Entity)` | | Invoked when: <br>**A)** An entity with the characteristics (components) expected by this system is added in the world; <br>**B)** This system is added in the world and this world has one or more entities with the characteristics expected by this system; <br>**C)** An existing entity in the same world receives a new component at runtime and all of its new components match the standard expected by this system. |
 | `exit(entity: Entity)` | | Invoked when: <br>**A)** An entity with the characteristics (components) expected by this system is removed from the world; <br>**B)** This system is removed from the world and this world has one or more entities with the characteristics expected by this system; <br>**C)** An existing entity in the same world loses a component at runtime and its new component set no longer matches the standard expected by this system |

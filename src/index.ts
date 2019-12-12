@@ -247,6 +247,14 @@ export abstract class System {
     public frequence: number;
 
     /**
+     * Invoked before updating entities available for this system. It is only invoked when there are entities with the
+     * characteristics expected by this system.
+     *
+     * @param time
+     */
+    public beforeUpdateAll?(time: number): void;
+
+    /**
      * Invoked in updates, limited to the value set in the "frequency" attribute
      *
      * @param time
@@ -254,6 +262,14 @@ export abstract class System {
      * @param entity
      */
     public update?(time: number, delta: number, entity: Entity): void;
+
+    /**
+     * Invoked after performing update of entities available for this system. It is only invoked when there are entities
+     * with the characteristics expected by this system.
+     *
+     * @param time
+     */
+    public afterUpdateAll?(time: number, entities: Entity[]): void;
 
     /**
      * Invoked when an expected feature of this system is added or removed from the entity
@@ -498,6 +514,14 @@ export default class ECS {
     public update() {
         let now = NOW();
 
+        let toCallAfterUpdateAll: {
+            [key: string]: {
+                system: System;
+                entities: Entity[];
+            }
+        } = {};
+
+
         this.entities.forEach(entity => {
             if (!entity.active) {
                 // Entidade inativa
@@ -530,10 +554,40 @@ export default class ECS {
                         entityLastUpdates[system.id] = now;
                     }
 
+                    let id = `_` + system.id;
+                    if (!toCallAfterUpdateAll[id]) {
+                        // Call afterUpdateAll
+                        if (system.beforeUpdateAll) {
+                            system.beforeUpdateAll(now);
+                        }
+
+                        // Save for afterUpdateAll
+                        toCallAfterUpdateAll[id] = {
+                            system: system,
+                            entities: []
+                        };
+                    }
+                    toCallAfterUpdateAll[id].entities.push(entity);
+
+                    // Call update
                     system.update(now, elapsed, entity);
                 }
             });
         });
+
+
+        // Call afterUpdateAll
+        for (var attr in toCallAfterUpdateAll) {
+            if (!toCallAfterUpdateAll.hasOwnProperty(attr)) {
+                continue;
+            }
+
+            let system = toCallAfterUpdateAll[attr].system;
+            if (system.afterUpdateAll) {
+                system.afterUpdateAll(now, toCallAfterUpdateAll[attr].entities);
+            }
+        }
+        toCallAfterUpdateAll = {};
     }
 
     /**
