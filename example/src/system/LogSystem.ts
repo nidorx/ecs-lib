@@ -1,14 +1,21 @@
 import {Component, Entity, System} from "ecs-lib";
-import {NodeLib} from "three/examples/jsm/nodes/core/NodeLib";
 
 export default class LogSystem extends System {
 
     constructor() {
-        super([-1], 0.5); // Logs all entities every 2 seconds (0.5 FPS)
+        super([-1], (1 / 5)); // Logs all entities every 5 seconds (1/5 = 0.2 FPS)
+    }
+
+    beforeUpdateAll(time: number): void {
+        console.log('LogSystem: Before update', time);
     }
 
     update(time: number, delta: number, entity: Entity): void {
         console.log('LogSystem', entity);
+    }
+
+    afterUpdateAll(time: number, entities: Entity[]): void {
+        console.log('LogSystem: After update', time, entities);
     }
 
     change(entity: Entity, added: Component<any>[], removed: Component<any>[]): void {
