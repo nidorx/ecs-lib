@@ -28,7 +28,14 @@ npm install --save ecs-lib
          * [Limiting Frequency (FPS)](#limiting-frequency-fps)
          * [Global Systems - All Entities](#global-systems---all-entities)
          * [Enter - When Adding New Entities](#enter---when-adding-new-entities)
+         * [Change - When you add or remove components](#change---when-you-add-or-remove-components)
          * [Exit - When Removing Entities](#exit---when-removing-entities)
+   * [API](#api)
+      * [ECS](#ecs)
+      * [Component](#component-1)
+         * [Component&lt;T&gt;](#component-t)
+      * [Entity](#entity-1)
+      * [System](#system-1)
    * [Feedback, Requests and Roadmap](#feedback-requests-and-roadmap)
    * [Contributing](#contributing)
       * [Translating and documenting](#translating-and-documenting)
@@ -374,6 +381,46 @@ export default class SceneObjectSystem extends System {
     }
 }
 ```
+
+## API
+
+| name | type | description |
+|---|---- |:---- | 
+| <h3>ECS</h2>   |
+| `System` | `System`  | _`static`_ reference to `System` class. _(`ECS.System`)_ |
+| `Entity` | `Entity`  | _`static`_ reference to `Entity` class. _(`ECS.Entity`)_ |
+| `Component` | `Component`  | _`static`_ reference to `Component` class. _(`ECS.Component`)_ |
+| `(systems?: System[])` | `constructor`  |  |
+| `getEntity(id: number)` | <code>Entity &#124; undefined</code>  | Get an entity by id |
+| `addEntity(entity: Entity)` |  | Add an entity to this world |
+| <code>removeEntity(entity: number &#124; Entity)</code> |  | Remove an entity from this world |
+| `addSystem(system: System)` |  | Add a system in this world |
+| `removeSystem(system: System)` |  | Remove a system from this world |
+| `update()` |  | Invokes the "update" method of the systems in this world. |
+| <h3>Component</h2> |
+| `register<T>()` | `Class<Component<T>>`  | _`static`_ Register a new component class |
+| <h3>Component&lt;T&gt;</h2> |
+| `type` | `number`  | _`static`_ reference to type id |
+| `allFrom(entity: Entity)` | `Component<T>[]`  | _`static`_ Get all instances of this component from entity |
+| `oneFrom(entity: Entity)` | `Component<T>`  | _`static`_ Get one instance of this component from entity |
+| `(data: T)` | `constructor`  | Create a new instance of this custom component |
+| `type` | `number`  | reference to type id from instance |
+| `data` | `T`  | reference to raw data from instance |
+| <h3>Entity</h2> |
+| `id` | `number`  | Instance unique id |
+| `active` | `boolean`  | Informs if the entity is active |
+| `add(component: Component)` |  | Add a component to this entity |
+| `remove(component: Component)` |  | Removes a component's reference from this entity |
+| `subscribe(handler: Susbcription)` | `cancel = () => Entity`  | Allows interested parties to receive information when this entity's component list is updated <br> `Susbcription = (entity: Entity, added: Component[], removed: Component[]) => void` |
+| <h3>System</h2> |
+| `(components: number[], frequence: number = 0)` | `constructor`  |  |
+| `id` | `number` | Unique identifier of an instance of this system |
+| `frequence` | `number` | The maximum times per second this system should be updated |
+| `update(time: number, delta: number, entity: Entity)` | | Invoked in updates, limited to the value set in the "frequency" attribute |
+| `change(entity: Entity, added: Component<any>[], removed: Component<any>[])` | | Invoked when an expected feature of this system is added or removed from the entity |
+| `enter(entity: Entity)` | | Invoked when: <br>**A)** An entity with the characteristics (components) expected by this system is added in the world; <br>**B)** This system is added in the world and this world has one or more entities with the characteristics expected by this system; <br>**C)** An existing entity in the same world receives a new component at runtime and all of its new components match the standard expected by this system. |
+| `exit(entity: Entity)` | | Invoked when: <br>**A)** An entity with the characteristics (components) expected by this system is removed from the world; <br>**B)** This system is removed from the world and this world has one or more entities with the characteristics expected by this system; <br>**C)** An existing entity in the same world loses a component at runtime and its new component set no longer matches the standard expected by this system |
+
 
 ## Feedback, Requests and Roadmap
 

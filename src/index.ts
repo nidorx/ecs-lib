@@ -29,10 +29,6 @@ type Susbcription = (entity: Entity, added: Component<any>[], removed: Component
  */
 export abstract class Entity {
 
-    public static sequence(): number {
-        return SEQ_ENTITY++;
-    }
-
     /**
      * Lista de interessados sobre a atualiação dos componentes
      */
@@ -68,7 +64,7 @@ export abstract class Entity {
     public active: boolean = true;
 
     constructor() {
-        this.id = Entity.sequence();
+        this.id = SEQ_ENTITY++;
     }
 
     private dispatch() {
@@ -77,10 +73,20 @@ export abstract class Entity {
             // Informa aos interessados sobre a atualização
             requestAnimationFrame(() => {
                 this.queued = false;
-                const added = this.added;
-                const removed = this.removed;
+
+                const removed = this.removed.filter((component, index, self) => {
+                    return (this.components[component.type] || []).indexOf(component) < 0
+                        && self.indexOf(component) === index;
+                });
+
+                const added = this.added.filter((component, index, self) => {
+                    return (this.components[component.type] || []).indexOf(component) >= 0
+                        && self.indexOf(component) === index;
+                });
+
                 this.added = [];
                 this.removed = [];
+
                 this.subscriptions.forEach(cb => cb(this, added, removed));
             });
         }
@@ -104,7 +110,7 @@ export abstract class Entity {
     }
 
     /**
-     * Add a component to the entity
+     * Add a component to this entity
      *
      * @param component
      */
@@ -148,7 +154,7 @@ export abstract class Entity {
 export type ComponentClassType<P> = (new (data: P) => Component<P>) & {
 
     /**
-     * Static reference to type
+     * Static reference to type id
      */
     type: number;
 
@@ -170,7 +176,7 @@ export type ComponentClassType<P> = (new (data: P) => Component<P>) & {
 /**
  * Representation of a component in ECS
  */
-export class Component<T> {
+export abstract class Component<T> {
 
     /**
      * Register a new component class
@@ -194,6 +200,11 @@ export class Component<T> {
                 }
             }
 
+            /**
+             * Create a new instance of this custom component
+             *
+             * @param data
+             */
             constructor(data: P) {
                 super(typeID, data);
             }
@@ -220,18 +231,18 @@ export class Component<T> {
 export abstract class System {
 
     /**
-     * Identificador único de uma instancia deste sistema
-     */
-    public id: number;
-
-    /**
      * IDs of the types of components this system expects the entity to have before it can act on. If you want to
      * create a system that acts on all entities, enter [-1]
      */
     private components: number[] = [];
 
     /**
-     * The maximum times per second this system should be updated.
+     * Unique identifier of an instance of this system
+     */
+    public id: number;
+
+    /**
+     * The maximum times per second this system should be updated
      */
     public frequence: number;
 
@@ -245,7 +256,7 @@ export abstract class System {
     public update?(time: number, delta: number, entity: Entity): void;
 
     /**
-     * Invoked when an expected feature of this system is added or removed from the entity.
+     * Invoked when an expected feature of this system is added or removed from the entity
      *
      * @param entity
      * @param added
@@ -415,7 +426,7 @@ export default class ECS {
     }
 
     /**
-     * Add the system in this world
+     * Add a system in this world
      *
      * @param system
      */
@@ -449,7 +460,7 @@ export default class ECS {
     }
 
     /**
-     * Remove the system from this world
+     * Remove a system from this world
      *
      * @param system
      */
@@ -535,7 +546,6 @@ export default class ECS {
             return;
         }
 
-
         const toNotify: System[] = this.entitySystems[entity.id].slice(0);
 
         outside:
@@ -570,7 +580,14 @@ export default class ECS {
 
         // Notify systems
         toNotify.forEach(system => {
-            (system.change as any)(entity, added, removed);
+            const components = system.getComponents();
+            const all = components.indexOf(-1) >= 0;
+            (system.change as any)(
+                entity,
+                // Send only the list of components this system expects
+                all ? added : added.filter(c => components.indexOf(c.type) >= 0),
+                all ? removed : removed.filter(c => components.indexOf(c.type) >= 0)
+            );
         });
     }
 
