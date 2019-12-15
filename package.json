@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "nyc mocha",
-    "coverage": "coveralls",
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
     "build": "npm run-script build-ts && npm run-script build-js",
     "build-js": "browserify src/index.ts -p [ tsify --emitDeclarationOnly=false ] -s ecs-lib > index.js",
     "build-ts": "tsc -p tsconfig.json",
