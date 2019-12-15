@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "nyc mocha",
+    "coverage": "coveralls",
     "build": "npm run-script build-ts && npm run-script build-js",
     "build-js": "browserify src/index.ts -p [ tsify --emitDeclarationOnly=false ] -s ecs-lib > index.js",
     "build-ts": "tsc -p tsconfig.json",
@@ -28,6 +29,7 @@
     "@types/node": "12.12.17",
     "browserify": "16.5.0",
     "chai": "4.2.0",
+    "coveralls": "3.0.9",
     "mocha": "6.2.2",
     "nyc": "14.1.1",
     "semver": "6.3.0",
