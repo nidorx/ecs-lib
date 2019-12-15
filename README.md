@@ -1,18 +1,14 @@
 <div align="center">
     <a href="https://www.npmjs.com/package/ecs-lib">
         <img src="https://badge.fury.io/js/ecs-lib.svg" alt="npm package" title="npm package" />
-    </a>
-    
+    </a>    
     <a href="https://travis-ci.org/nidorx/ecs-lib">
         <img src="https://travis-ci.org/nidorx/ecs-lib.svg?branch=master" alt="Build Status" title="Build Status" />
+    </a>    
+    <a href="https://coveralls.io/github/nidorx/ecs-lib?branch=master">
+        <img src="https://coveralls.io/repos/github/nidorx/ecs-lib/badge.svg?branch=master" alt="Coverage Status" />
     </a>
-    
-    <a href='https://coveralls.io/github/nidorx/ecs-lib?branch=master'>
-        <img src='https://coveralls.io/repos/github/nidorx/ecs-lib/badge.svg?branch=master' alt='Coverage Status' />
-    </a>
-
-    <br/>
-    
+    <br/>    
     <img src="https://github.com/nidorx/ecs-lib/raw/master/logo.jpg" width="882" />
 </div>
 
