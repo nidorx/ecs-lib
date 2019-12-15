@@ -2,12 +2,18 @@
     <a href="https://www.npmjs.com/package/ecs-lib">
         <img src="https://badge.fury.io/js/ecs-lib.svg" alt="npm package" title="npm package" />
     </a>
+    
     <a href="https://travis-ci.org/nidorx/ecs-lib">
         <img src="https://travis-ci.org/nidorx/ecs-lib.svg?branch=master" alt="Build Status" title="Build Status" />
     </a>
+    
+    <a href='https://coveralls.io/github/nidorx/ecs-lib?branch=master'>
+        <img src='https://coveralls.io/repos/github/nidorx/ecs-lib/badge.svg?branch=master' alt='Coverage Status' />
+    </a>
+
     <br/>
-    <img src="https://github.com/nidorx/ecs-lib/raw/master/logo.jpg" width="882" />    
-    <br/>
+    
+    <img src="https://github.com/nidorx/ecs-lib/raw/master/logo.jpg" width="882" />
 </div>
 
 **ecs-lib** is a tiny and easy to use [ECS _(Entity Component System)_](https://en.wikipedia.org/wiki/Entity_component_system) library for game programming. It's written in Typescript but you can use on node.js an web browser too. 
