@@ -1,5 +1,12 @@
 <div align="center">
-    <img src="./logo.jpg" width="882" /> 
+    <img src="https://github.com/nidorx/ecs-lib/raw/master/logo.jpg" width="882" /> 
+    <br/>
+    <a href="https://www.npmjs.com/package/ecs-lib">
+        <img src="https://badge.fury.io/js/ecs-lib.svg" alt="npm package" title="npm package" />
+    </a>
+    <a href="https://travis-ci.org/nidorx/ecs-lib">
+        <img src="https://travis-ci.org/nidorx/ecs-lib.svg?branch=master" alt="Build Status" title="Build Status" />
+    </a>
 </div>
 
 **ecs-lib** is a tiny and easy to use [ECS _(Entity Component System)_](https://en.wikipedia.org/wiki/Entity_component_system) library for game programming. It's written in Typescript but you can use on node.js an web browser too. 
@@ -11,6 +18,7 @@
 ```bash
 npm install --save ecs-lib
 ```
+
 
 ## Table of contents
    * [Documentation](#documentation)

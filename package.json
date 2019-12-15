@@ -1,50 +1,78 @@
 {
-    "name": "ecs-lib",
-    "version": "0.4.0",
-    "description": "Tiny and easy to use ECS (Entity Component System) library for game programming and much more",
-    "main": "index.js",
-    "scripts": {
-        "build": "npm run-script build-ts && npm run-script build-js",
-        "build-js": "browserify src/index.ts -p [ tsify --emitDeclarationOnly=false ] -s ecs-lib > index.js",
-        "build-ts": "tsc -p tsconfig.json",
-        "publish-lib": "node v-release.js && node publish.js",
-        "publish-lib-snapshot": "node v-snapshot.js &&  node publish.js"
-    },
-    "repository": {
-        "type": "git",
-        "url": "git+https://github.com/nidorx/ecs-lib.git"
-    },
-    "author": "Alex Rodin <contato@alexrodin.info>",
-    "license": "MIT",
-    "bugs": {
-        "url": "https://github.com/nidorx/ecs-lib/issues"
-    },
-    "homepage": "https://github.com/nidorx/ecs-lib#readme",
-    "devDependencies": {
-        "@types/node": "12.12.17",
-        "browserify": "16.5.0",
-        "semver": "6.3.0",
-        "tsify": "4.0.1",
-        "typescript": "3.7.3"
-    },
-    "files": [
-        "index.js",
-        "index.d.ts",
-        "LICENSE",
-        "README.md"
+  "name": "ecs-lib",
+  "version": "0.4.0",
+  "description": "Tiny and easy to use ECS (Entity Component System) library for game programming and much more",
+  "main": "index.js",
+  "scripts": {
+    "test": "nyc mocha",
+    "build": "npm run-script build-ts && npm run-script build-js",
+    "build-js": "browserify src/index.ts -p [ tsify --emitDeclarationOnly=false ] -s ecs-lib > index.js",
+    "build-ts": "tsc -p tsconfig.json",
+    "publish-lib": "node v-release.js && node publish.js",
+    "publish-lib-snapshot": "node v-snapshot.js &&  node publish.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nidorx/ecs-lib.git"
+  },
+  "author": "Alex Rodin <contato@alexrodin.info>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/nidorx/ecs-lib/issues"
+  },
+  "homepage": "https://github.com/nidorx/ecs-lib#readme",
+  "devDependencies": {
+    "@istanbuljs/nyc-config-typescript": "0.1.3",
+    "@types/chai": "4.2.7",
+    "@types/mocha": "5.2.7",
+    "@types/node": "12.12.17",
+    "browserify": "16.5.0",
+    "chai": "4.2.0",
+    "mocha": "6.2.2",
+    "nyc": "14.1.1",
+    "semver": "6.3.0",
+    "source-map-support": "0.5.16",
+    "ts-node": "8.5.4",
+    "tsify": "4.0.1",
+    "typescript": "3.7.3"
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "LICENSE",
+    "README.md"
+  ],
+  "keywords": [
+    "ecs",
+    "ecs-framework",
+    "entity-component",
+    "entity-component-system",
+    "entity",
+    "game",
+    "game-engine",
+    "gamedev",
+    "game-development",
+    "game-ecs",
+    "gameloop",
+    "threejs"
+  ],
+  "nyc": {
+    "extension": [
+      ".ts",
+      ".tsx"
     ],
-    "keywords": [
-        "ecs",
-        "ecs-framework",
-        "entity-component",
-        "entity-component-system",
-        "entity",
-        "game",
-        "game-engine",
-        "gamedev",
-        "game-development",
-        "game-ecs",
-        "gameloop",
-        "threejs"
-    ]
+    "exclude": [
+      "*.*",
+      "**/*.d.ts",
+      "example/**/*.*",
+      "coverage/**/*.*",
+      "test/**/*.*"
+    ],
+    "reporter": [
+      "html",
+      "lcov",
+      "text-summary"
+    ],
+    "all": true
+  }
 }

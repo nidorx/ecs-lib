@@ -16,13 +16,106 @@ if (typeof window !== 'undefined') {
     requestAnimationFrame = setImmediate;
 }
 
+console.log(requestAnimationFrame);
+
 let SEQ_SYSTEM = 1;
 
 let SEQ_ENTITY = 1;
 
 let SEQ_COMPONENT = 1;
 
-type Susbcription = (entity: Entity, added: Component<any>[], removed: Component<any>[]) => void;
+/**
+ * Utility class for asynchronous access to a list
+ */
+export class Iterator<T> {
+
+    private end = false;
+
+    private cache: T[] = [];
+
+    private next: (i: number) => T | void;
+
+    constructor(next: (i: number) => T | void) {
+        this.next = next;
+    }
+
+    /**
+     * Allows iterate across all items
+     *
+     * @param cb
+     */
+    each(cb: (item: T) => boolean | void) {
+        let index = 0;
+        while (true) {
+            let value;
+            if (this.cache.length <= index) {
+                if (this.end) {
+                    break;
+                }
+
+                value = this.next(index++);
+                if (value === undefined) {
+                    this.end = true;
+                    break;
+                }
+                this.cache.push(value);
+            } else {
+                value = this.cache[index++];
+            }
+
+            if (cb(value) === false) {
+                break;
+            }
+        }
+    }
+
+    /**
+     * returns the value of the first element that satisfies the provided testing function.
+     *
+     * @param test
+     */
+    find(test: (item: T) => boolean): T | undefined {
+        let out = undefined;
+        this.each((item) => {
+            if (test(item)) {
+                out = item;
+                // break
+                return false
+            }
+        });
+        return out;
+    }
+
+    /**
+     * creates a array with all elements that pass the test implemented by the provided function.
+     *
+     * @param test
+     */
+    filter(test: (item: T) => boolean): T[] {
+        let list: T[] = [];
+        this.each((item) => {
+            if (test(item)) {
+                list.push(item);
+            }
+        });
+        return list;
+    }
+
+    /**
+     * creates a new array with the results of calling a provided function on every element in this iterator.
+     *
+     * @param cb
+     */
+    map<P>(cb: (item: T) => P): P[] {
+        let list: P[] = [];
+        this.each((item) => {
+            list.push(cb(item));
+        });
+        return list;
+    }
+}
+
+export type Susbcription = (entity: Entity, added: Component<any>[], removed: Component<any>[]) => void;
 
 /**
  * Representation of an entity in ECS
@@ -223,6 +316,10 @@ export abstract class Component<T> {
     }
 }
 
+/**
+ * System callback
+ */
+export type EventCallback = (data: any, entities: Iterator<Entity>) => void;
 
 /**
  * Represents the logic that transforms component data of an entity from its current state to its next state. A system
@@ -234,17 +331,34 @@ export abstract class System {
      * IDs of the types of components this system expects the entity to have before it can act on. If you want to
      * create a system that acts on all entities, enter [-1]
      */
-    private components: number[] = [];
+    private readonly componentTypes: number[] = [];
+
+    private readonly callbacks: { [key: string]: Array<EventCallback> } = {};
 
     /**
      * Unique identifier of an instance of this system
      */
-    public id: number;
+    public readonly id: number;
 
     /**
      * The maximum times per second this system should be updated
      */
     public frequence: number;
+
+    /**
+     * Reference to the world, changed at runtime during interactions.
+     */
+    protected world: ECS = undefined as any;
+
+    /**
+     * Allows to trigger any event. Systems interested in this event will be notified immediately
+     *
+     * Injected by ECS at runtime
+     *
+     * @param event
+     * @param data
+     */
+    protected trigger: (event: string, data: any) => void = undefined as any;
 
     /**
      * Invoked before updating entities available for this system. It is only invoked when there are entities with the
@@ -305,18 +419,60 @@ export abstract class System {
     public exit?(entity: Entity): void;
 
     /**
-     * @param components IDs of the types of components this system expects the entity to have before it can act on.
+     * @param componentTypes IDs of the types of components this system expects the entity to have before it can act on.
      * If you want to create a system that acts on all entities, enter [-1]
      * @param frequence The maximum times per second this system should be updated. Defaults 0
      */
-    constructor(components: number[], frequence: number = 0) {
+    constructor(componentTypes: number[], frequence: number = 0) {
         this.id = SEQ_SYSTEM++;
-        this.components = components;
+        this.componentTypes = componentTypes;
         this.frequence = frequence;
     }
 
-    public getComponents(): number[] {
-        return this.components.slice();
+    /**
+     * Allows you to search in the world for all entities that have a specific set of components.
+     *
+     * @param componentTypes Enter [-1] to list all entities
+     */
+    protected query(componentTypes: number[]): Iterator<Entity> {
+        return this.world.query(componentTypes);
+    }
+
+    /**
+     * Allows the system to listen for a specific event that occurred during any update.
+     *
+     * In callback, the system has access to the existing entities in the world that are processed by this system, in
+     * the form of an Iterator, and the raw data sent by the event trigger.
+     *
+     * ATTENTION! The callback method will be invoked immediately after the event fires, avoid heavy processing.
+     *
+     * @param event
+     * @param callback
+     * @param once Allows you to perform the callback only once
+     */
+    protected listenTo(event: string, callback: EventCallback, once?: boolean) {
+        if (!this.callbacks.hasOwnProperty(event)) {
+            this.callbacks[event] = [];
+        }
+
+        if (once) {
+            let tmp = callback.bind(this);
+
+            callback = (data: any, entities: Iterator<Entity>) => {
+
+                tmp(data, entities);
+
+                let idx = this.callbacks[event].indexOf(callback);
+                if (idx >= 0) {
+                    this.callbacks[event].splice(idx, 1);
+                }
+                if (this.callbacks[event].length === 0) {
+                    delete this.callbacks[event];
+                }
+            }
+        }
+
+        this.callbacks[event].push(callback);
     }
 }
 
@@ -355,6 +511,29 @@ export default class ECS {
      * Saves subscriptions made to entities
      */
     private entitySubscription: { [key: number]: () => void } = {};
+
+    /**
+     * Injection for the system trigger method
+     *
+     * @param event
+     * @param data
+     */
+    private systemTrigger = (event: string, data: any) => {
+        this.systems.forEach(system => {
+
+            let callbacks: {
+                [key: string]: Array<EventCallback>
+            } = (system as any).callbacks;
+
+            if (callbacks.hasOwnProperty(event) && callbacks[event].length > 0) {
+                this.inject(system);
+                let entitiesIterator = this.query((system as any).componentTypes);
+                callbacks[event].forEach(callback => {
+                    callback(data, entitiesIterator);
+                });
+            }
+        })
+    };
 
     constructor(systems?: System[]) {
         if (systems) {
@@ -431,6 +610,7 @@ export default class ECS {
         if (systems) {
             systems.forEach(system => {
                 if (system.exit) {
+                    this.inject(system);
                     system.exit(entity as Entity);
                 }
             });
@@ -468,6 +648,7 @@ export default class ECS {
                 let systems = this.entitySystems[entity.id];
                 if (systems && systems.indexOf(system) >= 0) {
                     if (system.enter) {
+                        this.inject(system);
                         system.enter(entity);
                     }
                 }
@@ -493,6 +674,7 @@ export default class ECS {
                     let systems = this.entitySystems[entity.id];
                     if (systems && systems.indexOf(system) >= 0) {
                         if (system.exit) {
+                            this.inject(system);
                             system.exit(entity);
                         }
                     }
@@ -506,6 +688,41 @@ export default class ECS {
                 this.indexEntity(entity, system);
             });
         }
+    }
+
+    /**
+     * Allows you to search for all entities that have a specific set of components.
+     *
+     * @param componentTypes Enter [-1] to list all entities
+     */
+    public query(componentTypes: number[]): Iterator<Entity> {
+        let index = 0;
+        let listAll = componentTypes.indexOf(-1) >= 0;
+
+        return new Iterator<Entity>(() => {
+            outside:
+                for (let l = this.entities.length; index < l; index++) {
+                    let entity = this.entities[index];
+                    if (listAll) {
+                        // Prevents unnecessary processing
+                        return entity;
+                    }
+
+                    // -1 = All components. Allows to query for all entities in the world.
+                    const entityComponentIDs: number[] = [-1].concat(
+                        Object.keys((entity as any).components).map(v => Number.parseInt(v, 10))
+                    );
+
+                    for (var a = 0, j = componentTypes.length; a < j; a++) {
+                        if (entityComponentIDs.indexOf(componentTypes[a]) < 0) {
+                            continue outside;
+                        }
+                    }
+
+                    // Entity has all the components
+                    return entity;
+                }
+        });
     }
 
     /**
@@ -538,6 +755,7 @@ export default class ECS {
 
             systems.forEach(system => {
                 if (system.update) {
+                    this.inject(system);
 
                     elapsed = now - entityLastUpdates[system.id];
 
@@ -584,10 +802,25 @@ export default class ECS {
 
             let system = toCallAfterUpdateAll[attr].system;
             if (system.afterUpdateAll) {
+                this.inject(system);
                 system.afterUpdateAll(now, toCallAfterUpdateAll[attr].entities);
             }
         }
         toCallAfterUpdateAll = {};
+    }
+
+    /**
+     * Injects the execution context into the system.
+     *
+     * A system can exist on several worlds at the same time, ECS ensures that global methods will always reference the
+     * currently running world.
+     *
+     * @param system
+     */
+    private inject(system: System): System {
+        (system as any).world = this;
+        (system as any).trigger = this.systemTrigger;
+        return system;
     }
 
     /**
@@ -608,21 +841,22 @@ export default class ECS {
 
                 // System is listening to updates on entity?
                 if (system.change) {
-                    let systemComponents = system.getComponents();
 
-                    // Listen to all systems
-                    if (systemComponents.indexOf(-1) >= 0) {
+                    let systemComponentTypes = (system as any).componentTypes;
+
+                    // Listen to all component type
+                    if (systemComponentTypes.indexOf(-1) >= 0) {
                         continue;
                     }
 
                     for (var a = 0, l = added.length; a < l; a++) {
-                        if (systemComponents.indexOf(added[a].type) >= 0) {
+                        if (systemComponentTypes.indexOf(added[a].type) >= 0) {
                             continue outside;
                         }
                     }
 
                     for (var a = 0, l = removed.length; a < l; a++) {
-                        if (systemComponents.indexOf(removed[a].type) >= 0) {
+                        if (systemComponentTypes.indexOf(removed[a].type) >= 0) {
                             continue outside;
                         }
                     }
@@ -634,13 +868,14 @@ export default class ECS {
 
         // Notify systems
         toNotify.forEach(system => {
-            const components = system.getComponents();
-            const all = components.indexOf(-1) >= 0;
+            system = this.inject(system);
+            const systemComponentTypes = (system as any).componentTypes;
+            const all = systemComponentTypes.indexOf(-1) >= 0;
             (system.change as any)(
                 entity,
                 // Send only the list of components this system expects
-                all ? added : added.filter(c => components.indexOf(c.type) >= 0),
-                all ? removed : removed.filter(c => components.indexOf(c.type) >= 0)
+                all ? added : added.filter(c => systemComponentTypes.indexOf(c.type) >= 0),
+                all ? removed : removed.filter(c => systemComponentTypes.indexOf(c.type) >= 0)
             );
         });
     }
@@ -657,14 +892,15 @@ export default class ECS {
             return;
         }
 
-        const systemComponentIDs = system.getComponents();
+        const systemComponentTypes = (system as any).componentTypes;
 
-        for (var a = 0, l = systemComponentIDs.length; a < l; a++) {
-            if (entityComponentIDs.indexOf(systemComponentIDs[a]) < 0) {
+        for (var a = 0, l = systemComponentTypes.length; a < l; a++) {
+            if (entityComponentIDs.indexOf(systemComponentTypes[a]) < 0) {
                 // remove
                 if (idx >= 0) {
                     // Informs the system of relationship removal
                     if (system.exit) {
+                        this.inject(system);
                         system.exit(entity);
                     }
                     this.entitySystems[entity.id].splice(idx, 1);
@@ -681,6 +917,7 @@ export default class ECS {
 
             // Informs the system about the new relationship
             if (system.enter) {
+                this.inject(system);
                 system.enter(entity);
             }
         }
