@@ -28,6 +28,7 @@ npm install --save ecs-lib
       * [World](#world)
       * [Component](#component)
          * [Raw data access](#raw-data-access)
+         * [Secondary attributes](#secondary-attributes)
       * [Entity](#entity)
          * [Adding and removing from the world](#adding-and-removing-from-the-world)
          * [Adding and removing components](#adding-and-removing-components)
@@ -117,6 +118,13 @@ boxCmp.data.width = 33;
 console.log(boxCmp.data.width);
 ```
 
+#### Secondary attributes
+A component can have attributes. Attributes are secondary values used to save miscellaneous data required by some specialized systems.
+
+```typescript
+boxCmp.attr.specializedSystemMetadata = 33;
+console.log(boxCmp.attr.specializedSystemMetadata);
+```
 
 ### Entity
 

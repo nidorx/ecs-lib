@@ -310,6 +310,14 @@ export abstract class Component<T> {
 
     public data: T;
 
+    /**
+     * A component can have attributes. Attributes are secondary values used to save miscellaneous data required by some
+     * specialized systems.
+     */
+    public attr: {
+        [key: string]: any
+    } = {};
+
     constructor(type: number, data: T) {
         this.type = type;
         this.data = data;
