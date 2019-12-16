@@ -499,10 +499,9 @@ Describe as much detail as possible to get the problem reproduced and eventually
 ### Fixing defects and adding improvements
 
 1. Fork it (<https://github.com/nidorx/ecs-lib/fork>)
-2. Create your feature branch (`git checkout -b feature/fooBar`)
-3. Commit your changes (`git commit -am 'Add some fooBar'`)
-4. Push to the branch (`git push origin feature/fooBar`)
-5. Create a new Pull Request
+2. Commit your changes (`git commit -am 'Add some fooBar'`)
+3. Push to your master branch (`git push`)
+4. Create a new Pull Request
 
 ## License
 
