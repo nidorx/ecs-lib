@@ -580,6 +580,19 @@ export default class ECS {
     }
 
     /**
+     * Remove all entities and systems
+     */
+    public destroy() {
+        this.entities.forEach((entity) => {
+            this.removeEntity(entity);
+        });
+
+        this.systems.forEach(system => {
+            this.removeSystem(system);
+        });
+    }
+
+    /**
      * Get an entity by id
      *
      * @param id
@@ -720,6 +733,11 @@ export default class ECS {
             });
 
             this.systems.splice(idx, 1);
+
+            if ((system as any).world === this) {
+                (system as any).world = undefined;
+                (system as any).trigger = undefined;
+            }
 
             // Indexes entities
             this.entities.forEach(entity => {

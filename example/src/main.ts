@@ -96,21 +96,21 @@ function configureGUI() {
 
     gui = new GUI();
 
-    const config = {
+    const guiOptions = {
         KeyboardSystem: false,
         NPCSystem: false,
     };
 
-    gui.add(config, 'KeyboardSystem').onChange(() => {
-        if (config.KeyboardSystem) {
+    gui.add(guiOptions, 'KeyboardSystem').onChange(() => {
+        if (guiOptions.KeyboardSystem) {
             world.addSystem(keyboardSystem);
         } else {
             world.removeSystem(keyboardSystem);
         }
     });
 
-    gui.add(config, 'NPCSystem').onChange(() => {
-        if (config.NPCSystem) {
+    gui.add(guiOptions, 'NPCSystem').onChange(() => {
+        if (guiOptions.NPCSystem) {
             world.addSystem(aiSystem);
         } else {
             world.removeSystem(aiSystem);

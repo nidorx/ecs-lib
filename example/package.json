@@ -13,11 +13,15 @@
   "license": "MIT",
   "dependencies": {
     "dat.gui": "0.7.6",
-    "ecs-lib": "0.4.0",
-    "three": "0.110.0"
+    "ecs-lib": "0.6.0-pre.0",
+    "three": "0.110.0",
+    "react": "^16.12.0",
+    "react-dom": "^16.12.0"
   },
   "devDependencies": {
     "@types/dat.gui": "0.7.5",
+    "@types/react": "^16.9.11",
+    "@types/react-dom": "^16.9.4",
     "copy-webpack-plugin": "5.1.0",
     "ts-loader": "6.2.1",
     "typescript": "3.7.2",
