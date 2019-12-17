@@ -4,7 +4,7 @@ const CopyPlugin = require('copy-webpack-plugin');
 let config = {
     mode: 'development',
     entry: {
-        game: './src/main.ts'
+        game: './src/main.tsx'
     },
     output: {
         path: output,

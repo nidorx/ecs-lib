@@ -1,7 +1,5 @@
 import React from "react";
-import GUISession from "../../../components/GUISession";
-import {Object3D, PerspectiveCamera, Scene, WebGLRenderer} from "three";
-import {Factory} from "../../../../lib";
+import {PerspectiveCamera, Scene, WebGLRenderer} from "three";
 import KeyboardSystem from "../system/KeyboardSystem";
 import NPCSystem from "../system/NPCSystem";
 import ECS from "ecs-lib";
@@ -9,6 +7,7 @@ import SphereFactorySystem from "../system/SphereFactorySystem";
 import CubeFactorySystem from "../system/CubeFactorySystem";
 import CubeEntity from "../entity/CubeEntity";
 import SphereEntity from "../entity/SphereEntity";
+import GUISession from "../utils/GUISession";
 
 type Props = {
     gui: GUISession,
@@ -18,9 +17,7 @@ type Props = {
     renderer: WebGLRenderer;
 };
 
-type State = {
-    rotate: boolean
-};
+type State = {};
 
 export class KeyboardPage extends React.PureComponent<Props, State> {
 
@@ -33,10 +30,7 @@ export class KeyboardPage extends React.PureComponent<Props, State> {
         </div>
     );
 
-    state: State = {
-        rotate: true
-    };
-    private rocket: Object3D;
+    state: State = {};
 
     componentDidMount(): void {
         const gui = this.props.gui;
@@ -96,9 +90,6 @@ export class KeyboardPage extends React.PureComponent<Props, State> {
      * Permite executar ações ao renderizar o canvas
      */
     render3D() {
-        if (this.state.rotate && this.rocket) {
-            this.rocket.rotateY(0.001);
-        }
     }
 
     render() {

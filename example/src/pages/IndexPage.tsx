@@ -20,8 +20,11 @@ import ECS from "ecs-lib";
 import SceneObjectSystem from "../system/SceneObjectSystem";
 import LogSystem from "../system/LogSystem";
 
-
 const ENVMAPS = [
+    {
+        texture: 'lake',
+        title: 'Lake'
+    },
     {
         texture: 'bridge',
         title: 'Bridge'
@@ -29,10 +32,6 @@ const ENVMAPS = [
     {
         texture: 'miramar',
         title: 'Miramar'
-    },
-    {
-        texture: 'lake',
-        title: 'Lake'
     }
 ];
 
@@ -140,6 +139,9 @@ export class IndexPage extends React.PureComponent<Props, State> {
         const perspectiveControls = new OrbitControls(perspectiveCamera, renderer.domElement);
         const orthographicControls = new OrbitControls(orthographicCamera, renderer.domElement);
 
+        perspectiveControls.enableKeys = false;
+        orthographicControls.enableKeys = false;
+
         // ----------------------------------------------------------------
         // CONTROLE DE RENDERIZAÇÃO
         // ----------------------------------------------------------------
@@ -191,6 +193,12 @@ export class IndexPage extends React.PureComponent<Props, State> {
 
             const animate = () => {
                 requestAnimationFrame(animate);
+
+                // Update ECS
+
+                if (this.state.world) {
+                    this.state.world.update();
+                }
 
                 perspectiveControls.update();
                 orthographicControls.update();
@@ -264,7 +272,7 @@ export class IndexPage extends React.PureComponent<Props, State> {
                             fn();
                         });
 
-                        if(this.state.world){
+                        if (this.state.world) {
                             this.state.world.destroy();
                         }
 
@@ -462,10 +470,16 @@ export class IndexPage extends React.PureComponent<Props, State> {
                     PageComponent
                         ? (
                             <div>
-                                <div className={'page-title'}>{(PageComponent as any).title}</div>
+                                <div id={'page-title'}>
+                                    <h1>ECS (Entity Component System) library for game programming</h1>
+                                    <a href="https://github.com/nidorx/ecs-lib/tree/master/example">https://github.com/nidorx/ecs-lib/tree/master/example</a>
+                                    <h2>{(PageComponent as any).title}</h2>
+                                    {(PageComponent as any).help}
+                                </div>
                                 <PageComponent
                                     ref={this.pageRef}
                                     gui={this.state.session}
+                                    world={this.state.world}
                                     scene={this.state.scene}
                                     camera={this.state.camera}
                                     renderer={this.state.renderer}

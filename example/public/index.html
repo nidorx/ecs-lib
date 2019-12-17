@@ -17,8 +17,15 @@
             background: #01374b;
         }
 
+        #root {
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 2;
+        }
+
         #page-title {
-            position: absolute;
+            position: fixed;
             background: #222;
             color: #fff;
             padding: 10px;
@@ -105,7 +112,7 @@
                 display: block;
             }
 
-            #page-title{
+            #page-title {
                 padding-top: 80px;
                 padding-bottom: 0;
                 padding-right: 0;
@@ -116,12 +123,13 @@
     </style>
 </head>
 <body>
-<div id="page-title">
-    <h1>ECS (Entity Component System) library for game programming</h1>
-    <a href="https://github.com/nidorx/ecs-lib/tree/master/example">https://github.com/nidorx/ecs-lib/tree/master/example</a>
-    <p><strong>KeyboardSystem:</strong> Use directional keys to move character (Cube)</p>
-    <p><strong>NPCSystem:</strong> System Controlled Character (Sphere)</p>
-</div>
+<!--<div id="page-title">-->
+    <!--<h1>ECS (Entity Component System) library for game programming</h1>-->
+    <!--<a href="https://github.com/nidorx/ecs-lib/tree/master/example">https://github.com/nidorx/ecs-lib/tree/master/example</a>-->
+    <!--<p><strong>KeyboardSystem:</strong> Use directional keys to move character (Cube)</p>-->
+    <!--<p><strong>NPCSystem:</strong> System Controlled Character (Sphere)</p>-->
+<!--</div>-->
+<canvas id="canvas"></canvas>
 <div id="root"></div>
 <div id="joypad">
     <a

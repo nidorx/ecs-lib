@@ -786,10 +786,11 @@ export default class ECS {
      * Invokes the "update" method of the systems in this world.
      */
     public update() {
-        let now = this.lastUpdate = NOW();
+        let now = NOW();
 
         // adds scaledDelta
         this.gameTime += (now - this.lastUpdate) * this.timeScale;
+        this.lastUpdate = now;
 
         let toCallAfterUpdateAll: {
             [key: string]: {
