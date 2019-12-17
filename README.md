@@ -37,6 +37,7 @@ npm install --save ecs-lib
       * [System](#system)
          * [Adding and removing from the world](#adding-and-removing-from-the-world-1)
          * [Limiting frequency (FPS)](#limiting-frequency-fps)
+         * [Time Scaling - Slow motion effect](#time-scaling---slow-motion-effect)
          * [Global systems - all entities](#global-systems---all-entities)
          * [Before and After update](#before-and-after-update)
          * [Enter - When adding new entities](#enter---when-adding-new-entities)
@@ -284,6 +285,37 @@ export default class PhysicsSystem extends System {
        //... physics stuff
     }
 }
+```
+
+#### Time Scaling - Slow motion effect
+
+A very interesting feature in **ecs-lib** is the TIMESCALE. This allows you to change the rate that time passes in the game, also known as the timescale. You can set the timescale by changing the `timeScale` property of the world.
+
+A time scale of 1 means normal speed. 0.5 means half the speed and 2.0 means twice the speed. If you set the game's timescale to 0.1, it will be ten times slower but still smooth - a good slow motion effect!
+
+The timescale works by changing the value returned in the `time` and `delta` properties of the system update method. This means that the behaviors are affected and any movement using delta. If you do not use delta in your motion calculations, motion will not be affected by the timescale! Therefore, to use the timescale, simply use the delta correctly in all movements.
+
+> **ATTENTION!** The systems continue to be invoked obeying their normal frequencies, what changes is only the values received in the time and delta parameters.
+
+```typescript
+export default class PhysicsSystem extends System {
+
+    constructor() {
+        super([
+            Object3DComponent.type,
+            VelocityComponent.type
+        ], 25);
+    }
+
+    update(time: number, delta: number, entity: Entity): void {
+        let object = Object3DComponent.oneFrom(entity).data;
+        let velocity = VelocityComponent.oneFrom(entity).data;
+        object.position.y += velocity.y * delta;   
+    }
+}
+
+world.timeScale = 1; // Normal speed
+world.timeScale = 0.5; // Slow motion
 ```
 
 #### Global systems - all entities

@@ -511,9 +511,14 @@ export default class ECS {
     private entitySystems: { [key: number]: System[] } = {};
 
     /**
-     * Records the last instant a system was run in this world for an entity
+     * Records the last instant a system was run in this world for an entity, using real time
      */
     private entitySystemLastUpdate: { [key: number]: { [key: number]: number } } = {};
+
+    /**
+     * Records the last instant a system was run in this world for an entity, using game time
+     */
+    private entitySystemLastUpdateGame: { [key: number]: { [key: number]: number } } = {};
 
     /**
      * Saves subscriptions made to entities
@@ -542,6 +547,29 @@ export default class ECS {
             }
         })
     };
+
+    /**
+     * Allows you to apply slow motion effect on systems execution. When timeScale is 1, the timestamp and delta
+     * parameters received by the systems are consistent with the actual timestamp. When timeScale is 0.5, the values
+     * received by systems will be half of the actual value.
+     *
+     * ATTENTION! The systems continue to be invoked obeying their normal frequencies, what changes is only the values
+     * received in the timestamp and delta parameters.
+     */
+    public timeScale: number = 1;
+
+    /**
+     * Last execution of update method
+     */
+    private lastUpdate: number = NOW();
+
+    /**
+     * The timestamp of the game, different from the real world, is updated according to timeScale. If at no time does
+     * the timeScale change, the value is the same as the current timestamp.
+     *
+     * This value is sent to the systems update method.
+     */
+    private gameTime: number = NOW();
 
     constructor(systems?: System[]) {
         if (systems) {
@@ -572,6 +600,7 @@ export default class ECS {
 
         this.entities.push(entity);
         this.entitySystemLastUpdate[entity.id] = {};
+        this.entitySystemLastUpdateGame[entity.id] = {};
 
         // Remove subscription
         if (this.entitySubscription[entity.id]) {
@@ -627,6 +656,7 @@ export default class ECS {
         // Remove associative indexes
         delete this.entitySystems[entity.id];
         delete this.entitySystemLastUpdate[entity.id];
+        delete this.entitySystemLastUpdateGame[entity.id];
     }
 
     /**
@@ -733,11 +763,15 @@ export default class ECS {
         });
     }
 
+
     /**
      * Invokes the "update" method of the systems in this world.
      */
     public update() {
-        let now = NOW();
+        let now = this.lastUpdate = NOW();
+
+        // adds scaledDelta
+        this.gameTime += (now - this.lastUpdate) * this.timeScale;
 
         let toCallAfterUpdateAll: {
             [key: string]: {
@@ -759,13 +793,16 @@ export default class ECS {
             }
 
             const entityLastUpdates = this.entitySystemLastUpdate[entity.id];
-            let elapsed, interval;
+            const entityLastUpdatesGame = this.entitySystemLastUpdateGame[entity.id];
+            let elapsed, elapsedScaled, interval;
 
             systems.forEach(system => {
                 if (system.update) {
                     this.inject(system);
 
                     elapsed = now - entityLastUpdates[system.id];
+                    elapsedScaled = this.gameTime - entityLastUpdatesGame[system.id];
+
 
                     // Limit FPS
                     if (system.frequence > 0) {
@@ -776,15 +813,17 @@ export default class ECS {
 
                         // adjust for fpsInterval not being a multiple of RAF's interval (16.7ms)
                         entityLastUpdates[system.id] = now - (elapsed % interval);
+                        entityLastUpdatesGame[system.id] = this.gameTime - (elapsedScaled % interval);
                     } else {
                         entityLastUpdates[system.id] = now;
+                        entityLastUpdatesGame[system.id] = this.gameTime;
                     }
 
                     let id = `_` + system.id;
                     if (!toCallAfterUpdateAll[id]) {
                         // Call afterUpdateAll
                         if (system.beforeUpdateAll) {
-                            system.beforeUpdateAll(now);
+                            system.beforeUpdateAll(this.gameTime);
                         }
 
                         // Save for afterUpdateAll
@@ -796,7 +835,7 @@ export default class ECS {
                     toCallAfterUpdateAll[id].entities.push(entity);
 
                     // Call update
-                    system.update(now, elapsed, entity);
+                    system.update(this.gameTime, elapsedScaled, entity);
                 }
             });
         });
@@ -811,7 +850,7 @@ export default class ECS {
             let system = toCallAfterUpdateAll[attr].system;
             if (system.afterUpdateAll) {
                 this.inject(system);
-                system.afterUpdateAll(now, toCallAfterUpdateAll[attr].entities);
+                system.afterUpdateAll(this.gameTime, toCallAfterUpdateAll[attr].entities);
             }
         }
         toCallAfterUpdateAll = {};
@@ -896,6 +935,7 @@ export default class ECS {
             if (idx >= 0) {
                 this.entitySystems[entity.id].splice(idx, 1);
                 delete this.entitySystemLastUpdate[entity.id][system.id];
+                delete this.entitySystemLastUpdateGame[entity.id][system.id];
             }
             return;
         }
@@ -913,6 +953,7 @@ export default class ECS {
                     }
                     this.entitySystems[entity.id].splice(idx, 1);
                     delete this.entitySystemLastUpdate[entity.id][system.id];
+                    delete this.entitySystemLastUpdateGame[entity.id][system.id];
                 }
                 return
             }
@@ -922,6 +963,7 @@ export default class ECS {
         if (idx < 0) {
             this.entitySystems[entity.id].push(system);
             this.entitySystemLastUpdate[entity.id][system.id] = NOW();
+            this.entitySystemLastUpdateGame[entity.id][system.id] = this.gameTime;
 
             // Informs the system about the new relationship
             if (system.enter) {
