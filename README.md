@@ -318,6 +318,14 @@ world.timeScale = 1; // Normal speed
 world.timeScale = 0.5; // Slow motion
 ```
 
+##### Pausing
+
+You can set the timescale to 0. This stops all movement. It is an easy way to pause the game. Go back to 1 and the game will resume.
+
+You may find that you can still do things like shoot using the game controls. You can get around this by placing your main game events in a group and activating / deactivating that group while pausing and not pausing.
+
+It's also a good way to test if you used delta correctly. If you used it correctly, setting the timescale to 0 will stop everything in the game. If you have not used it correctly, some objects may keep moving even if the game should be paused! In this case, you can check how these objects are moved and make sure you are using delta correctly.
+
 #### Global systems - all entities
 
 You can also create systems that receive updates from all entities, regardless of existing components. To do this, simply enter `[-1]` in the system builder. This functionality may be useful for debugging and other rating mechanisms for your game.

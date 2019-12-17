@@ -3,7 +3,7 @@ import {PerspectiveCamera, Scene, WebGLRenderer} from "three";
 import ECS from "ecs-lib";
 import GUISession from "../utils/GUISession";
 import AnimatedEntity from "../entity/AnimatedEntity";
-import ParticleFactorySystem from "../system/ParticleFactorySystem";
+import ParticleSystem from "../system/ParticleSystem";
 import PongSystem from "../system/PongSystem";
 import SphereEntity from "../entity/SphereEntity";
 import SphereFactorySystem from "../system/SphereFactorySystem";
@@ -25,7 +25,8 @@ export class TimescalePage extends React.PureComponent<Props, State> {
 
     static help = (
         <div>
-            <p>A time scale of 1 means normal speed. 0.5 means half the speed and 2.0 means twice the speed. If you set the game's timescale to 0.1, it will be ten times slower but still smooth - a good slow motion effect!
+            <p>A time scale of 1 means normal speed. 0.5 means half the speed and 2.0 means twice the speed. If you set
+                the game's timescale to 0.1, it will be ten times slower but still smooth - a good slow motion effect!
             </p>
         </div>
     );
@@ -38,7 +39,7 @@ export class TimescalePage extends React.PureComponent<Props, State> {
 
         world.addSystem(new SphereFactorySystem());
         world.addSystem(new PongSystem());
-        world.addSystem(new ParticleFactorySystem());
+        world.addSystem(new ParticleSystem());
 
         // Add animated entity
         world.addEntity(new AnimatedEntity());
@@ -73,11 +74,24 @@ export class TimescalePage extends React.PureComponent<Props, State> {
         world.addEntity(sphereB);
 
         const guiOptions = {
-            timescale: 1.0
+            timescale: 1.0,
+            pause: false
         };
 
         gui.add(guiOptions, 'timescale', 0.1, 2.0).onChange(() => {
-            world.timeScale = guiOptions.timescale;
+            if (guiOptions.pause) {
+                world.timeScale = 0;
+            } else {
+                world.timeScale = guiOptions.timescale;
+            }
+        });
+
+        gui.add(guiOptions, 'pause').onChange(() => {
+            if (guiOptions.pause) {
+                world.timeScale = 0;
+            } else {
+                world.timeScale = guiOptions.timescale;
+            }
         });
     }
 

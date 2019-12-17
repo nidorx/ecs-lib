@@ -832,7 +832,7 @@ export default class ECS {
 
                         // adjust for fpsInterval not being a multiple of RAF's interval (16.7ms)
                         entityLastUpdates[system.id] = now - (elapsed % interval);
-                        entityLastUpdatesGame[system.id] = this.gameTime - (elapsedScaled % interval);
+                        entityLastUpdatesGame[system.id] = this.gameTime;
                     } else {
                         entityLastUpdates[system.id] = now;
                         entityLastUpdatesGame[system.id] = this.gameTime;

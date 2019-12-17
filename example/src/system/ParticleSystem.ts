@@ -5,7 +5,7 @@ import {AdditiveBlending, Geometry, Mesh, Points, PointsMaterial, TextureLoader,
 
 const textureLoader = new TextureLoader();
 
-export default class ParticleFactorySystem extends System {
+export default class ParticleSystem extends System {
 
     constructor() {
         super([

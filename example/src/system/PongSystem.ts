@@ -21,6 +21,7 @@ export default class PongSystem extends System {
         let sphere = SphereComponent.oneFrom(entity);
         let config = PongComponent.oneFrom(entity);
 
+
         config.attr.velocity.y -= (GRAVITY * config.data.mass) * delta;
         object.data.position.y += config.attr.velocity.y * delta;
 
