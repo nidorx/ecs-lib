@@ -38,6 +38,7 @@ npm install --save ecs-lib
          * [Adding and removing from the world](#adding-and-removing-from-the-world-1)
          * [Limiting frequency (FPS)](#limiting-frequency-fps)
          * [Time Scaling - Slow motion effect](#time-scaling---slow-motion-effect)
+             * [Pausing](#pausing)
          * [Global systems - all entities](#global-systems---all-entities)
          * [Before and After update](#before-and-after-update)
          * [Enter - When adding new entities](#enter---when-adding-new-entities)
