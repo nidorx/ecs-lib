@@ -569,7 +569,7 @@ export default class ECS {
      *
      * This value is sent to the systems update method.
      */
-    private gameTime: number = NOW();
+    private gameTime: number = 0;
 
     constructor(systems?: System[]) {
         if (systems) {

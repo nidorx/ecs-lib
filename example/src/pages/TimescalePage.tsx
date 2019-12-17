@@ -4,6 +4,10 @@ import ECS from "ecs-lib";
 import GUISession from "../utils/GUISession";
 import AnimatedEntity from "../entity/AnimatedEntity";
 import ParticleFactorySystem from "../system/ParticleFactorySystem";
+import PongSystem from "../system/PongSystem";
+import SphereEntity from "../entity/SphereEntity";
+import SphereFactorySystem from "../system/SphereFactorySystem";
+import {PongComponent} from "../component/PongComponent";
 
 type Props = {
     gui: GUISession,
@@ -21,8 +25,8 @@ export class TimescalePage extends React.PureComponent<Props, State> {
 
     static help = (
         <div>
-            <p><strong>KeyboardSystem:</strong> Use directional keys to move character (Cube)</p>
-            <p><strong>NPCSystem:</strong> System Controlled Character (Sphere)</p>
+            <p>A time scale of 1 means normal speed. 0.5 means half the speed and 2.0 means twice the speed. If you set the game's timescale to 0.1, it will be ten times slower but still smooth - a good slow motion effect!
+            </p>
         </div>
     );
 
@@ -32,16 +36,47 @@ export class TimescalePage extends React.PureComponent<Props, State> {
         const gui = this.props.gui;
         const world = this.props.world;
 
+        world.addSystem(new SphereFactorySystem());
+        world.addSystem(new PongSystem());
         world.addSystem(new ParticleFactorySystem());
 
         // Add animated entity
         world.addEntity(new AnimatedEntity());
 
+        let sphereA = new SphereEntity({
+            radius: 5,
+            heightSegments: 8,
+            widthSegments: 8,
+            x: 25,
+            z: -25
+        }, '#0000FF');
+
+        sphereA.add(new PongComponent({
+            mass: 2.0,
+            impulse: 0.3
+        }));
+        world.addEntity(sphereA);
+
+
+        let sphereB = new SphereEntity({
+            radius: 5,
+            heightSegments: 8,
+            widthSegments: 8,
+            x: -25,
+            z: 25
+        }, '#FF0000');
+
+        sphereB.add(new PongComponent({
+            mass: 0.5,
+            impulse: 0.2
+        }));
+        world.addEntity(sphereB);
+
         const guiOptions = {
-            timescale: 1
+            timescale: 1.0
         };
 
-        gui.add(guiOptions, 'timescale', 0.1, 1.8).onChange(() => {
+        gui.add(guiOptions, 'timescale', 0.1, 2.0).onChange(() => {
             world.timeScale = guiOptions.timescale;
         });
     }

@@ -7,8 +7,8 @@ export default class AnimatedEntity extends Entity {
         super();
 
         this.add(new ParticleComponent({
-            particles: 1800,
-            size: 20
+            particles: 800,
+            size: 5
         }));
     }
 }

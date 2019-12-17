@@ -26,6 +26,14 @@ export default class SphereFactorySystem extends System {
             const material = new MeshBasicMaterial({color: color});
             const object3d = new Mesh(geometry, material);
 
+            if (sphere.x) {
+                object3d.position.x = sphere.x;
+            }
+
+            if (sphere.z) {
+                object3d.position.z = sphere.z;
+            }
+
             // Append new component to entity
             entity.add(new Object3DComponent(object3d));
         }
