@@ -928,7 +928,7 @@ export default class ECS {
         });
     }
 
-    private indexEntitySystem = (entity: Entity, entityComponentIDs: number[], system: System) => {
+    private indexEntitySystem = (entity: Entity, system: System) => {
         const idx = this.entitySystems[entity.id].indexOf(system);
 
         // Sistema não existe neste mundo, remove indexação
@@ -944,6 +944,10 @@ export default class ECS {
         const systemComponentTypes = (system as any).componentTypes;
 
         for (var a = 0, l = systemComponentTypes.length; a < l; a++) {
+            // -1 = All components. Allows a system to receive updates from all entities in the world.
+            let entityComponentIDs: number[] = [-1].concat(
+                Object.keys((entity as any).components).map(v => Number.parseInt(v, 10))
+            );
             if (entityComponentIDs.indexOf(systemComponentTypes[a]) < 0) {
                 // remove
                 if (idx >= 0) {
@@ -952,6 +956,7 @@ export default class ECS {
                         this.inject(system);
                         system.exit(entity);
                     }
+
                     this.entitySystems[entity.id].splice(idx, 1);
                     delete this.entitySystemLastUpdate[entity.id][system.id];
                     delete this.entitySystemLastUpdateGame[entity.id][system.id];
@@ -985,19 +990,14 @@ export default class ECS {
             this.entitySystems[entity.id] = [];
         }
 
-        // -1 = All components. Allows a system to receive updates from all entities in the world.
-        const entityComponentIDs: number[] = [-1].concat(
-            Object.keys((entity as any).components).map(v => Number.parseInt(v, 10))
-        );
-
         if (system) {
             // Index entity for a specific system
-            this.indexEntitySystem(entity, entityComponentIDs, system);
+            this.indexEntitySystem(entity, system);
 
         } else {
             // Indexes the entire entity
             this.systems.forEach((system) => {
-                this.indexEntitySystem(entity, entityComponentIDs, system);
+                this.indexEntitySystem(entity, system);
             });
         }
     }
