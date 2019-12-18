@@ -209,6 +209,10 @@ export abstract class Entity {
         if (idx >= 0) {
             this.components[type].splice(idx, 1);
 
+            if(this.components[type].length < 1){
+                delete this.components[type];
+            }
+
             // Informa aos interessados sobre a atualização
             this.subscriptions.forEach(cb => cb(this, undefined, component));
         }
