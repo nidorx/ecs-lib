@@ -31,7 +31,7 @@ export default class CubeFactorySystem extends System {
         }
     }
 
-    change(entity: Entity, added: Component<any>[], removed: Component<any>[]): void {
+    change(entity: Entity, added?: Component<any>, removed?: Component<any>): void {
         console.log('CubeFactorySystem::change', entity, added, removed);
     }
 }

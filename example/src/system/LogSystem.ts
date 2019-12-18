@@ -18,7 +18,7 @@ export default class LogSystem extends System {
         console.log('LogSystem: After update', time, entities);
     }
 
-    change(entity: Entity, added: Component<any>[], removed: Component<any>[]): void {
+    change(entity: Entity, added?: Component<any>, removed?: Component<any>): void {
         console.log('LogSystem::change', entity, added, removed);
     }
 }

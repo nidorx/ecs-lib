@@ -1,22 +1,33 @@
 let NOW: () => number;
 
-let requestAnimationFrame: (cb: () => void) => void = () => 0;
+// Include a performance.now polyfill.
+// In node.js, use process.hrtime.
+// @ts-ignore
+if (typeof (self) === 'undefined' && typeof (process) !== 'undefined' && process.hrtime) {
+    NOW = function () {
+        // @ts-ignore
+        var time = process.hrtime();
 
-if (typeof window !== 'undefined') {
-    requestAnimationFrame = window.requestAnimationFrame;
-    if (window.performance) {
-        NOW = window.performance.now.bind(window.performance);
-    }
-} else {
-    const start = Date.now();
-    NOW = () => {
-        return Date.now() - start;
+        // Convert [seconds, nanoseconds] to milliseconds.
+        return time[0] * 1000 + time[1] / 1000000;
     };
-
-    requestAnimationFrame = setImmediate;
 }
-
-console.log(requestAnimationFrame);
+// In a browser, use self.performance.now if it is available.
+else if (typeof (self) !== 'undefined' && self.performance !== undefined && self.performance.now !== undefined) {
+    // This must be bound, because directly assigning this function
+    // leads to an invocation exception in Chrome.
+    NOW = self.performance.now.bind(self.performance);
+}
+// Use Date.now if it is available.
+else if (Date.now !== undefined) {
+    NOW = Date.now;
+}
+// Otherwise, use 'new Date().getTime()'.
+else {
+    NOW = function () {
+        return new Date().getTime();
+    };
+}
 
 let SEQ_SYSTEM = 1;
 
@@ -115,7 +126,7 @@ export class Iterator<T> {
     }
 }
 
-export type Susbcription = (entity: Entity, added: Component<any>[], removed: Component<any>[]) => void;
+export type Susbcription = (entity: Entity, added?: Component<any>, removed?: Component<any>) => void;
 
 /**
  * Representation of an entity in ECS
@@ -126,21 +137,6 @@ export abstract class Entity {
      * Lista de interessados sobre a atualiação dos componentes
      */
     private subscriptions: Array<Susbcription> = [];
-
-    /**
-     * Informs that subscriptions have been triggered.
-     */
-    private queued = false;
-
-    /**
-     * Quais componentes foram adicionados nessa entidade antes de informar aos interessados
-     */
-    private added: Component<any>[] = [];
-
-    /**
-     *  Quais componentes foram removidos dessa entidade antes de informar aos interessados
-     */
-    private removed: Component<any>[] = [];
 
     /**
      * Components by type
@@ -158,31 +154,6 @@ export abstract class Entity {
 
     constructor() {
         this.id = SEQ_ENTITY++;
-    }
-
-    private dispatch() {
-        if (!this.queued) {
-            this.queued = true;
-            // Informa aos interessados sobre a atualização
-            requestAnimationFrame(() => {
-                this.queued = false;
-
-                const removed = this.removed.filter((component, index, self) => {
-                    return (this.components[component.type] || []).indexOf(component) < 0
-                        && self.indexOf(component) === index;
-                });
-
-                const added = this.added.filter((component, index, self) => {
-                    return (this.components[component.type] || []).indexOf(component) >= 0
-                        && self.indexOf(component) === index;
-                });
-
-                this.added = [];
-                this.removed = [];
-
-                this.subscriptions.forEach(cb => cb(this, added, removed));
-            });
-        }
     }
 
     /**
@@ -213,11 +184,14 @@ export abstract class Entity {
             this.components[type] = [];
         }
 
+        if (this.components[type].indexOf(component) >= 0) {
+            return
+        }
+
         this.components[type].push(component);
 
-        this.added.push(component);
-
-        this.dispatch();
+        // Informa aos interessados sobre a atualização
+        this.subscriptions.forEach(cb => cb(this, component, undefined));
     }
 
     /**
@@ -234,10 +208,10 @@ export abstract class Entity {
         const idx = this.components[type].indexOf(component);
         if (idx >= 0) {
             this.components[type].splice(idx, 1);
-            this.removed.push(component);
-        }
 
-        this.dispatch();
+            // Informa aos interessados sobre a atualização
+            this.subscriptions.forEach(cb => cb(this, undefined, component));
+        }
     }
 }
 
@@ -400,7 +374,7 @@ export abstract class System {
      * @param added
      * @param removed
      */
-    public change?(entity: Entity, added: Component<any>[], removed: Component<any>[]): void;
+    public change?(entity: Entity, added?: Component<any>, removed?: Component<any>): void;
 
     /**
      * Invoked when:
@@ -894,7 +868,7 @@ export default class ECS {
      *
      * @param entity
      */
-    private onEntityUpdate(entity: Entity, added: Component<any>[], removed: Component<any>[]) {
+    private onEntityUpdate(entity: Entity, added?: Component<any>, removed?: Component<any>) {
         if (!this.entitySystems[entity.id]) {
             return;
         }
@@ -915,16 +889,12 @@ export default class ECS {
                         continue;
                     }
 
-                    for (var a = 0, l = added.length; a < l; a++) {
-                        if (systemComponentTypes.indexOf(added[a].type) >= 0) {
-                            continue outside;
-                        }
+                    if (added && systemComponentTypes.indexOf(added.type) >= 0) {
+                        continue outside;
                     }
 
-                    for (var a = 0, l = removed.length; a < l; a++) {
-                        if (systemComponentTypes.indexOf(removed[a].type) >= 0) {
-                            continue outside;
-                        }
+                    if (removed && systemComponentTypes.indexOf(removed.type) >= 0) {
+                        continue outside;
                     }
                 }
 
@@ -940,8 +910,20 @@ export default class ECS {
             (system.change as any)(
                 entity,
                 // Send only the list of components this system expects
-                all ? added : added.filter(c => systemComponentTypes.indexOf(c.type) >= 0),
-                all ? removed : removed.filter(c => systemComponentTypes.indexOf(c.type) >= 0)
+                all
+                    ? added
+                    : (
+                        added && systemComponentTypes.indexOf(added.type)
+                            ? added
+                            : undefined
+                    ),
+                all
+                    ? removed
+                    : (
+                        removed && systemComponentTypes.indexOf(removed.type) >= 0
+                            ? removed
+                            : undefined
+                    )
             );
         });
     }

@@ -152,7 +152,7 @@ describe("ECS", () => {
                     exitCalled = callOrder++;
                 }
 
-                change(entity: Entity, added: Component<any>[], removed: Component<any>[]): void {
+                change(entity: Entity, added?: Component<any>, removed?: Component<any>): void {
                     changedCalled = callOrder++;
                 }
             }
@@ -196,16 +196,9 @@ describe("ECS", () => {
             expect(afterUpdateAllCalled).to.eql(0);
             expect(exitCalled).to.eql(0);
 
-            // does nothing, system execution only occurs in the future
+            // expect enter
             let componentA = new ComponentA(100);
             entity.add(componentA);
-
-            expect(enterCalled).to.eql(0);
-            expect(changedCalled).to.eql(0);
-            expect(beforeUpdateAllCalled).to.eql(0);
-            expect(updateCalled).to.eql(0);
-            expect(afterUpdateAllCalled).to.eql(0);
-            expect(exitCalled).to.eql(0);
 
             // expect enter
             (global as any).setImmediateExec();

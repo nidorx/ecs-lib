@@ -430,7 +430,7 @@ Invoked when:
          super([-1], 0.5); // Logs all entities every 2 seconds (0.5 FPS)
      }
  
-     change(entity: Entity, added: Component<any>[], removed: Component<any>[]): void {
+     change(entity: Entity, added?: Component<any>, removed?: Component<any>): void {
          console.log(entity, added, removed);
      }
  }
@@ -508,7 +508,7 @@ export default class SceneObjectSystem extends System {
 | `beforeUpdateAll(time: number)` | | Invoked before updating entities available for this system. It is only invoked when there are entities with the characteristics expected by this system. |
 | `update(time: number, delta: number, entity: Entity)` | | Invoked in updates, limited to the value set in the "frequency" attribute |
 | `afterUpdateAll(time: number, entities: Entity[])` | | Invoked after performing update of entities available for this system. It is only invoked when there are entities with the characteristics expected by this system. |
-| `change(entity: Entity, added: Component<any>[], removed: Component<any>[])` | | Invoked when an expected feature of this system is added or removed from the entity |
+| `change(entity: Entity, added?: Component<any>, removed?: Component<any>)` | | Invoked when an expected feature of this system is added or removed from the entity |
 | `enter(entity: Entity)` | | Invoked when: <br>**A)** An entity with the characteristics (components) expected by this system is added in the world; <br>**B)** This system is added in the world and this world has one or more entities with the characteristics expected by this system; <br>**C)** An existing entity in the same world receives a new component at runtime and all of its new components match the standard expected by this system. |
 | `exit(entity: Entity)` | | Invoked when: <br>**A)** An entity with the characteristics (components) expected by this system is removed from the world; <br>**B)** This system is removed from the world and this world has one or more entities with the characteristics expected by this system; <br>**C)** An existing entity in the same world loses a component at runtime and its new component set no longer matches the standard expected by this system |
 
