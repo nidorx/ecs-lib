@@ -209,7 +209,7 @@ export abstract class Entity {
         if (idx >= 0) {
             this.components[type].splice(idx, 1);
 
-            if(this.components[type].length < 1){
+            if (this.components[type].length < 1) {
                 delete this.components[type];
             }
 
@@ -917,7 +917,7 @@ export default class ECS {
                 all
                     ? added
                     : (
-                        added && systemComponentTypes.indexOf(added.type)
+                        added && systemComponentTypes.indexOf(added.type) >= 0
                             ? added
                             : undefined
                     ),
