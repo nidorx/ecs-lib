@@ -12,7 +12,7 @@
     <img src="https://github.com/nidorx/ecs-lib/raw/master/logo.jpg" width="882" />
 </div>
 
-**ecs-lib** is a tiny and easy to use [ECS _(Entity Component System)_](https://en.wikipedia.org/wiki/Entity_component_system) library for game programming. It's written in Typescript but you can use on node.js an web browser too. 
+**ecs-lib** is a tiny and easy to use [ECS _(Entity Component System)_](https://en.wikipedia.org/wiki/Entity_component_system) library for game programming. It's written in Typescript but you can use on node.js and web browser too. 
 
 
 **TLDR;** Take a look at the [example](https://nidorx.github.io/ecs-lib/) and its [source code](https://github.com/nidorx/ecs-lib/tree/master/example)
